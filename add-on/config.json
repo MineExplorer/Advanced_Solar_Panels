@@ -1,0 +1,30 @@
+{
+	"enabled": true,
+	"show_resource_errors": true,
+	"advanced_solar_panel": {
+		"gen_day": 8,
+		"gen_night": 1,
+		"output": 32,
+		"storage": 32000
+	},
+	"hybrid_solar_panel": {
+		"gen_day": 64,
+		"gen_night": 8,
+		"output": 128,
+		"storage": 100000
+	},
+	"ultimate_solar_panel": {
+		"gen_day": 512,
+		"gen_night": 64,
+		"output": 512,
+		"storage": 1000000
+	},
+	"quantum_solar_panel": {
+		"gen_day": 4096,
+		"gen_night": 2048,
+		"output": 8192,
+		"storage": 10000000
+	},
+	"hard_recipes": true,
+	"simple_asp_recipe": false
+}
