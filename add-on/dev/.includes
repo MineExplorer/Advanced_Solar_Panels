@@ -1,15 +1,15 @@
 header.js
 translation.js
 
-items/components.js
-items/adv_solar_helmet.js
-items/hybrid_solar_helmet.js
-items/ultimate_solar_helmet.js.js
-
 machine/Advanced_Solar.js
 machine/Hybrid_Solar.js
 machine/Ultimate_Solar.js
 machine/Quantum_Solar.js
 machine/Molecular.js
+
+items/components.js
+items/adv_helmet.js
+items/hybrid_helmet.js
+items/ultimate_helmet.js
 
 recipes.js

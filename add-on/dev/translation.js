@@ -16,7 +16,7 @@ Translation.addTranslation("Iridium Iron Plate", {ru: "Иридиевая жел
 Translation.addTranslation("Reinforced Iridium Iron Plate", {ru: "Укрепленная иридиевая железная пластина", zh: "铱铁合金板"});
 Translation.addTranslation("Irradiant Reinforced Plate", {ru: "Излучающая укреплённая пластина", zh: "强化铱铁合金板"});
 Translation.addTranslation("Iridium Ingot", {ru: "Иридиевый слиток", zh: "铱锭"});
-Translation.addTranslation("Uranium Ingot", {ru: "Урановый слиток", zh: "铀锭"});
+Translation.addTranslation("Enriched Uranium Ingot", {ru: "Обогащённый урановый слиток", zh: "铀锭"});
 Translation.addTranslation("Irradiant Uranium Ingot", {ru: "Излучающий урановый слиток", zh: "阳光合金"});
 Translation.addTranslation("MT Core", {ru: "MT-ядро", zh: "分子重组核心"});
 Translation.addTranslation("Quantum Core", {ru: "Квантовое ядро", zh: "量子核心"});

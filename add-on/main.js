@@ -1,4 +1,15 @@
 /*
+BUILD INFO:
+  dir: dev
+  target: main.js
+  files: 12
+*/
+
+
+
+// file: header.js
+
+/*
    ___        _                                                    ____                                 ____
   / _ \      | |                                            _     / ___|          _                    |  _ \                         _
  | (_) |   __| |  _    _   __ _   _ __     ___    ___    __| |   | |__     ___   | |   __ _   _ __     | |_) |  __ _   _ __     ___  | |  ___
@@ -6,20 +17,18 @@
  | | | | | (_| |  \ \/ / | (_| | | | | | | |__  |  __/ | (_| |    ___| | | (_) | | | | (_| | | |       | |    | (_| | | | | | |  __/ | | \__ \
  |_| |_|  \__,_|   \__/   \__,_| |_| |_|  \___|  \___|  \__,_|   |____/   \___/  |_|  \__,_| |_|       |_|     \__,_| |_| |_|  \___| |_| |___/
                      
- by MrMacflame (VK: vk.com/mrmacflame), MajaProduction (VK: vk.com/mc.maja) and MineExplorer (VK: vk.com/vlad.gr2027, YouTube: http://www.youtube.com/c/MineExplorer2027)
+ by MineExplorer (vk.com/vlad.gr2027) and NikuJagajaga(vk.com/nkjgjg)
 
  This code is a copyright, do not distribute.
 */
-Callback.addCallback("LevelLoaded", function(){
-	Game.message(ChatColor.PURPLE + "Advanced Solar Panels v1.1");
-});
 
-var nativeGetLightLevel = ModAPI.requireGlobal("Level.getBrightness");
+var GUI_SCALE = 3.2;
+IMPORT("ChargeItem");
 
-var GUI_BAR_STANDART_SCALE = 3.2;
 
-ModAPI.registerAPI("ASPAddonLoaded", null);
 
+
+// file: translation.js
 
 // Machines
 Translation.addTranslation("Advanced Solar Panel", {ru: "Улучшенная солнечная панель", zh: "高级太阳能发电机"});
@@ -39,7 +48,7 @@ Translation.addTranslation("Iridium Iron Plate", {ru: "Иридиевая жел
 Translation.addTranslation("Reinforced Iridium Iron Plate", {ru: "Укрепленная иридиевая железная пластина", zh: "铱铁合金板"});
 Translation.addTranslation("Irradiant Reinforced Plate", {ru: "Излучающая укреплённая пластина", zh: "强化铱铁合金板"});
 Translation.addTranslation("Iridium Ingot", {ru: "Иридиевый слиток", zh: "铱锭"});
-Translation.addTranslation("Uranium Ingot", {ru: "Урановый слиток", zh: "铀锭"});
+Translation.addTranslation("Enriched Uranium Ingot", {ru: "Обогащённый урановый слиток", zh: "铀锭"});
 Translation.addTranslation("Irradiant Uranium Ingot", {ru: "Излучающий урановый слиток", zh: "阳光合金"});
 Translation.addTranslation("MT Core", {ru: "MT-ядро", zh: "分子重组核心"});
 Translation.addTranslation("Quantum Core", {ru: "Квантовое ядро", zh: "量子核心"});
@@ -50,15 +59,652 @@ Translation.addTranslation("Hybrid Solar Helmet", {ru: "Гибридный со�
 Translation.addTranslation("Ultimate Solar Helmet", {ru: "Совершенный солнечный шлем", zh: "终极混合太阳能头盔"});
 
 
+
+
+// file: machine/Advanced_Solar.js
+
+IDRegistry.genBlockID("ASP");
+Block.createBlock("ASP", [
+	{name: "Advanced Solar Panel", texture: [["asp", 2], ["asp", 1], ["asp", 0], ["asp", 0], ["asp", 0], ["asp", 0]], inCreative: true}
+], "opaque");
+
+Block.registerDropFunction("ASP", function(coords, blockID, blockData, level){
+	return ICore.Machine.getMachineDrop(coords, blockID, level);
+});
+
+
+var ASP = {
+	gen_day: parseInt(__config__.access("advanced_solar_panel.gen_day")),
+	gen_night: parseInt(__config__.access("advanced_solar_panel.gen_night")),
+	output: parseInt(__config__.access("advanced_solar_panel.output")),
+	energy_storage: parseInt(__config__.access("advanced_solar_panel.storage"))
+}
+
+var guiASP = new UI.StandartWindow({
+	standart: {
+		header: {text: {text: "Advanced Solar Panel"}},
+		inventory: {standart: true},
+		background: {standart: true}
+	},
+	
+	params: {slot: "asp_slot"},
+	
+	drawing: [
+		{type: "background", color: android.graphics.Color.parseColor("#353535")},
+		{type: "bitmap", x: 350, y: 40, bitmap: "asp_background", scale: 2.1},
+		{type: "bitmap", x: 398, y: 107, bitmap: "asp_energybar_0", scale: GUI_SCALE},
+	],
+	
+	elements: {
+		"energyScale": {type: "scale", x: 398 + GUI_SCALE * 4, y: 107, direction: 0, value: 0.5, bitmap: "asp_energybar_1", scale: GUI_SCALE},
+		"slot1": {type: "slot", x: 400, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot2": {type: "slot", x: 459, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot3": {type: "slot", x: 518, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot4": {type: "slot", x: 577, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: "Storage:"},
+		"textInfo1": {type: "text", x: 628, y: 105, width: 300, height: 50, text: "/32000"},
+		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: "Max Output: " + ASP.output + " EU/t"},
+		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: "Generating:"},
+		"light": {type: "image", x: 426, y: 175, bitmap: "asp_dark", scale: GUI_SCALE}
+	}
+});
+
+
+ICore.Machine.registerGenerator(BlockID.ASP, {
+	defaultValues: {
+		canSeeSky: false
+	},
+	
+	getEnergyStorage: function(){
+		return ASP.energy_storage;
+	},
+	
+	getGuiScreen: function(){
+		return guiASP;
+	},
+	
+	init: function(){
+		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	tick: function(){
+		var energyStorage = this.getEnergyStorage();
+		var content = this.container.getGuiContent();
+		if(World.getThreadTime()%100 == 0){
+			this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+		}
+		if(this.data.canSeeSky){
+			var time = World.getWorldTime()%24000;
+			if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
+				this.data.energy = Math.min(this.data.energy + ASP.gen_day, energyStorage);
+				this.container.setText("textGen", "Generating: " + ASP.gen_day + " EU/t"); 
+				if(content){ 
+				content.elements["light"].bitmap = "asp_sun";}
+			}
+			else{
+				this.data.energy = Math.min(this.data.energy + ASP.gen_night, energyStorage);
+				this.container.setText("textGen", "Generating: " + ASP.gen_night + " EU/t");
+				if(content){
+				content.elements["light"].bitmap = "asp_moon";}
+			}
+		}
+		else{
+			this.container.setText("textGen", "Generating: 0 EU/t");
+			if(content){
+			content.elements["light"].bitmap = "asp_dark";}
+		}
+		
+		for(var i = 1; i <= 4; i++){
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, ASP.output, 4);
+		}
+		
+		this.container.setScale("energyScale", this.data.energy / energyStorage);
+		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+	},
+	
+	energyTick: function(type, src){
+		var output = Math.min(ASP.output, this.data.energy);
+		this.data.energy += src.add(output) - output;
+	}
+});
+
+
+
+
+// file: machine/Hybrid_Solar.js
+
+IDRegistry.genBlockID("HSP");
+Block.createBlock("HSP", [
+	{name: "Hybrid Solar Panel", texture: [["hsp", 2], ["hsp", 1], ["hsp", 0], ["hsp", 0], ["hsp", 0], ["hsp", 0]], inCreative: true}
+], "opaque");
+
+Block.registerDropFunction("HSP", function(coords, blockID, blockData, level){
+	return ICore.Machine.getMachineDrop(coords, blockID, level);
+});
+
+var HSP = {
+	gen_day: parseInt(__config__.access("hybrid_solar_panel.gen_day")),
+	gen_night: parseInt(__config__.access("hybrid_solar_panel.gen_night")),
+	output: parseInt(__config__.access("hybrid_solar_panel.output")),
+	energy_storage: parseInt(__config__.access("hybrid_solar_panel.storage"))
+}
+
+var guiHSP = new UI.StandartWindow({
+	standart: {
+		header: {text: {text: "Hybrid Solar Panel"}},
+		inventory: {standart: true},
+		background: {standart: true}
+	},
+	
+	params: {slot: "asp_slot"},
+	
+	drawing: [
+		{type: "background", color: android.graphics.Color.parseColor("#353535")},
+		{type: "bitmap", x: 350, y: 40, bitmap: "asp_background", scale: 2.1},
+		{type: "bitmap", x: 398, y: 107, bitmap: "asp_energybar_0", scale: GUI_SCALE},
+	],
+	
+	elements: {
+		"energyScale": {type: "scale", x: 398 + GUI_SCALE * 4, y: 107, direction: 0, value: 0.5, bitmap: "asp_energybar_1", scale: GUI_SCALE},
+		"slot1": {type: "slot", x: 400, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot2": {type: "slot", x: 459, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot3": {type: "slot", x: 518, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot4": {type: "slot", x: 577, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: "Storage:"},
+		"textInfo1": {type: "text", x: 628, y: 105, width: 300, height: 50, text: "/100000"},
+		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: "Max Output: " + HSP.output + " EU/t"},
+		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: "Generating:"},
+		"light": {type: "image", x: 426, y: 175, bitmap: "asp_dark", scale: GUI_SCALE}
+	}
+});
+
+
+
+ICore.Machine.registerGenerator(BlockID.HSP, {
+	defaultValues: {
+		canSeeSky: false
+	},
+	
+	getEnergyStorage: function(){
+		return HSP.energy_storage;
+	},
+	
+	getGuiScreen: function(){
+		return guiHSP;
+	},
+	
+	init: function(){
+		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	tick: function(){
+		var energyStorage = this.getEnergyStorage();
+		var content = this.container.getGuiContent();
+		if(World.getThreadTime()%100 == 0){
+			this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+		}
+		if(this.data.canSeeSky){
+			var time = World.getWorldTime()%24000;
+			if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
+				this.data.energy = Math.min(this.data.energy + HSP.gen_day, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + HSP.gen_day + " EU/t"); 
+				if(content){ 
+				content.elements["light"].bitmap = "asp_sun";}
+			}
+			else{
+				this.data.energy = Math.min(this.data.energy + HSP.gen_night, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + HSP.gen_night + " EU/t");
+				if(content){
+				content.elements["light"].bitmap = "asp_moon";}
+			}
+		}
+		else{
+			this.container.setText("textGen", "Generating: 0 EU/t");
+			if(content){
+			content.elements["light"].bitmap = "asp_dark";}
+		}
+		
+		for(var i = 1; i <= 4; i++){
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, HSP.output, 1);
+		}
+		
+		this.container.setScale("energyScale", this.data.energy / energyStorage);
+		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+	},
+	
+	energyTick: function(type, src){
+		var output = Math.min(HSP.output, this.data.energy);
+		this.data.energy += src.add(output) - output;
+	}
+});
+
+
+
+
+// file: machine/Ultimate_Solar.js
+
+IDRegistry.genBlockID("USP");
+Block.createBlock("USP", [
+	{name: "Ultimate Solar Panel", texture: [["usp", 2], ["usp", 1], ["usp", 0], ["usp", 0], ["usp", 0], ["usp", 0]], inCreative: true}
+], "opaque");
+
+Block.registerDropFunction("USP", function(coords, blockID, blockData, level){
+	return ICore.Machine.getMachineDrop(coords, blockID, level);
+});
+
+var USP = {
+	gen_day: parseInt(__config__.access("ultimate_solar_panel.gen_day")),
+	gen_night: parseInt(__config__.access("ultimate_solar_panel.gen_night")),
+	output: parseInt(__config__.access("ultimate_solar_panel.output")),
+	energy_storage: parseInt(__config__.access("ultimate_solar_panel.storage"))
+}
+
+var guiUSP = new UI.StandartWindow({
+	standart: {
+		header: {text: {text: "Ultimate Solar Panel"}},
+		inventory: {standart: true},
+		background: {standart: true}
+	},
+	
+	params: {slot: "asp_slot"},
+	
+	drawing: [
+		{type: "background", color: android.graphics.Color.parseColor("#353535")},
+		{type: "bitmap", x: 350, y: 40, bitmap: "asp_background", scale: 2.1},
+		{type: "bitmap", x: 398, y: 107, bitmap: "asp_energybar_0", scale: GUI_SCALE},
+	],
+	
+	elements: {
+		"energyScale": {type: "scale", x: 398 + GUI_SCALE * 4, y: 107, direction: 0, value: 0.5, bitmap: "asp_energybar_1", scale: GUI_SCALE},
+		"slot1": {type: "slot", x: 400, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot2": {type: "slot", x: 459, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot3": {type: "slot", x: 518, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot4": {type: "slot", x: 577, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: "Storage:"},
+		"textInfo1": {type: "text", x: 628, y: 105, width: 300, height: 50, text: "/1000000"},
+		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: "Max Output: " + USP.output + " EU/t"},
+		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: "Generating:"},
+		"light": {type: "image", x: 426, y: 175, bitmap: "asp_dark", scale: GUI_SCALE}
+	}
+});
+
+
+ICore.Machine.registerGenerator(BlockID.USP, {
+	defaultValues: {
+		canSeeSky: false
+	},
+	
+	getEnergyStorage: function(){
+		return USP.energy_storage;
+	},
+	
+	getGuiScreen: function(){
+		return guiUSP;
+	},
+	
+	init: function(){
+		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	tick: function(){
+		var energyStorage = this.getEnergyStorage();
+		var content = this.container.getGuiContent();
+		if(World.getThreadTime()%100 == 0){
+			this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+		}
+		if(this.data.canSeeSky){
+			var time = World.getWorldTime()%24000;
+			if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
+				this.data.energy = Math.min(this.data.energy + USP.gen_day, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + USP.gen_day + " EU/t"); 
+				if(content){ 
+				content.elements["light"].bitmap = "asp_sun";}
+			}
+			else{
+				this.data.energy = Math.min(this.data.energy + USP.gen_night, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + USP.gen_night + " EU/t");
+				if(content){
+				content.elements["light"].bitmap = "asp_moon";}
+			}
+		}
+		else{
+			this.container.setText("textGen", "Generating: 0 EU/t");
+			if(content){
+			content.elements["light"].bitmap = "asp_dark";}
+		}
+		
+		for(var i = 1; i <= 4; i++){
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, USP.output, 4);
+		}
+		
+		this.container.setScale("energyScale", this.data.energy / energyStorage);
+		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+	},
+	
+	energyTick: function(type, src){
+		var output = Math.min(USP.output, this.data.energy);
+		this.data.energy += src.add(output) - output;
+	}
+});
+
+
+
+
+// file: machine/Quantum_Solar.js
+
+IDRegistry.genBlockID("QSP");
+Block.createBlock("QSP", [
+	{name: "Quantum Solar Panel", texture: [["qsp", 2], ["qsp", 1], ["qsp", 0], ["qsp", 0], ["qsp", 0], ["qsp", 0]], inCreative: true}
+], "opaque");
+
+Block.registerDropFunction("QSP", function(coords, blockID, blockData, level){
+	return ICore.Machine.getMachineDrop(coords, blockID, level);
+});
+
+var QSP = {
+	gen_day: parseInt(__config__.access("quantum_solar_panel.gen_day")),
+	gen_night: parseInt(__config__.access("quantum_solar_panel.gen_night")),
+	output: parseInt(__config__.access("quantum_solar_panel.output")),
+	energy_storage: parseInt(__config__.access("quantum_solar_panel.storage"))
+}
+
+var guiQSP = new UI.StandartWindow({
+	standart: {
+		header: {text: {text: "Quantum Solar Panel"}},
+		inventory: {standart: true},
+		background: {standart: true}
+	},
+	
+	params: {slot: "asp_slot"},
+	
+	drawing: [
+		{type: "background", color: android.graphics.Color.parseColor("#353535")},
+		{type: "bitmap", x: 350, y: 40, bitmap: "asp_background", scale: 2.1},
+		{type: "bitmap", x: 398, y: 107, bitmap: "asp_energybar_0", scale: GUI_SCALE},
+	],
+	
+	elements: {
+		"energyScale": {type: "scale", x: 398 + GUI_SCALE * 4, y: 107, direction: 0, value: 0.5, bitmap: "asp_energybar_1", scale: GUI_SCALE},
+		"slot1": {type: "slot", x: 400, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot2": {type: "slot", x: 459, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot3": {type: "slot", x: 518, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"slot4": {type: "slot", x: 577, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
+		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: "Storage:"},
+		"textInfo1": {type: "text", x: 628, y: 105, width: 300, height: 50, text: "/10000000"},
+		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: "Max Output: " + QSP.output + " EU/t"},
+		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: "Generating:"},
+		"light": {type: "image", x: 426, y: 175, bitmap: "asp_dark", scale: GUI_SCALE}
+	}
+});
+
+
+ICore.Machine.registerGenerator(BlockID.QSP, {
+	defaultValues: {
+		canSeeSky: false
+	},
+	
+	getEnergyStorage: function(){
+		return QSP.energy_storage;
+	},
+	
+	getGuiScreen: function(){
+		return guiQSP;
+	},
+	
+	init: function(){
+		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	tick: function(){
+		var energyStorage = this.getEnergyStorage();
+		var content = this.container.getGuiContent();
+		if(World.getThreadTime()%100 == 0){
+			this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+		}
+		if(this.data.canSeeSky){
+			var time = World.getWorldTime()%24000;
+			if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
+				this.data.energy = Math.min(this.data.energy + QSP.gen_day, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + QSP.gen_day + " EU/t"); 
+				if(content){ 
+				content.elements["light"].bitmap = "asp_sun";}
+			}
+			else{
+				this.data.energy = Math.min(this.data.energy + QSP.gen_night, this.getEnergyStorage());
+				this.container.setText("textGen", "Generating: " + QSP.gen_night + " EU/t");
+				if(content){
+				content.elements["light"].bitmap = "asp_moon";}
+			}
+		}
+		else{
+			this.container.setText("textGen", "Generating: 0 EU/t");
+			if(content){
+			content.elements["light"].bitmap = "asp_dark";}
+		}
+		
+		for(var i = 1; i <= 4; i++){
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, QSP.output, 4);
+		}
+		
+		this.container.setScale("energyScale", this.data.energy / energyStorage);
+		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+	},
+	
+	energyTick: function(type, src){
+		var output = Math.min(QSP.output, this.data.energy);
+		this.data.energy += src.add(output) - output;
+	}
+});
+
+
+
+
+// file: machine/Molecular.js
+
+IDRegistry.genBlockID("molecular_transformer");
+Block.createBlock("molecular_transformer", [{name: "", texture: []}]);
+
+(function(){
+  const mesh = new RenderMesh();
+  mesh.setBlockTexture("molecular_transformer", 0);
+  mesh.importFromFile(__dir__ + "res/molecular_transformer.obj", "obj", null);
+  const model = new BlockRenderer.Model(mesh);
+  const render = new ICRender.Model();
+  render.addEntry(model);
+  BlockRenderer.setStaticICRender(BlockID.molecular_transformer, 0, render);
+})();
+
+IDRegistry.genItemID("molecular_transformer");
+Item.createItem("molecular_transformer", "Molecular Transformer", {name: "molecular_transformer"});
+Item.registerUseFunction("molecular_transformer", function(c, item, block){
+  c = c.relative;
+  block = World.getBlockID(c.x, c.y, c.z)
+  if(GenerationUtils.isTransparentBlock(block)){
+    World.setBlock(c.x, c.y, c.z, BlockID.molecular_transformer);
+    World.addTileEntity(c.x, c.y, c.z);
+    Player.decreaseCarriedItem();
+    Game.prevent();
+  }
+});
+
+Block.registerDropFunction("molecular_transformer", function(){
+  return [[ItemID.molecular_transformer, 1]];
+});
+
+Callback.addCallback("PreLoaded", function(){
+	Recipes.addShaped({id: ItemID.molecular_transformer, count: 1, data: 0}, [
+	 "aba",
+	 "cxc", 
+	 "aba"
+	], ['x', ItemID.mtCore, 0, 'a', BlockID.machineBlockAdvanced, 0, 'b', BlockID.transformerEV, 0, 'c', ItemID.circuitAdvanced, 0]);
+	
+	var mt_recipes = {
+		"397:1": {id: 399, count: 1, data: 0, energy: 25e7},
+		265: {id: ItemID.iridiumChunk, count: 1, data: 0, energy: 9e6},
+		87: {id: 289, count: 2, data: 0, energy: 7e4},
+		12: {id: 13, count: 1, data: 0, energy: 5e4},
+		3: {id: 82, count: 1, data: 0, energy: 5e4},
+		"263:1": {id: 263, count: 1, data: 0, energy: 6e4},
+		348: {id: ItemID.sunnariumPart, count: 1, data: 0, energy: 1e6},
+		89: {id: ItemID.sunnarium, count: 1, data: 0, energy: 9e6},
+		"35:4": {id: 89, count: 1, data: 0, energy: 5e5},
+		"35:11": {id: 22, count: 1, data: 0, energy: 5e5},
+		"35:14": {id: 152, count: 1, data: 0, energy: 5e5},
+		"263:0": {id: 264, count: 1, data: 0, energy: 9e6},
+		"ItemID.dustDiamond": {id: 264, count: 1, data: 0, energy: 6e4},
+		"ItemID.ingotLead": {id: ItemID.ingotSilver, count: 1, data: 0, energy: 5e5},
+		"ItemID.ingotSilver": {id: 266, count: 1, data: 0, energy: 1e6},
+		// mod integration
+		"351:4": {id: ItemID.gemSapphire, count: 1, data: 0, energy: 5e6},
+		331: {id: ItemID.gemRuby, count: 1, data: 0, energy: 5e6},
+		"ItemID.dustTitanium": {id: ItemID.dustChrome, count: 1, data: 0, energy: 5e5},
+		"ItemID.ingotTitanium": {id: ItemID.ingotChrome, count: 1, data: 0, energy: 5e5},
+		"ItemID.ingotCopper": {id: ItemID.ingotNickel, count: 1, data: 0, energy: 3e5},
+		266: {id: ItemID.ingotPlatinum, count: 1, data: 0, energy: 9e6},
+		// nether quartz -> certus quartz 5e5
+	}
+	for(var key in mt_recipes){
+		var result = mt_recipes[key];
+		var id = key;
+		if(key.split(":").length < 2){
+			id = eval(key);
+		}
+		if(id && result.id){
+			ICore.Recipe.addRecipeFor("molecularTransformer", id, result);
+		}
+	}
+});
+
+var guiMT = new UI.StandartWindow({
+	standart: {
+		header: {text: {text: "Molecular Transformer"}},
+		inventory: {standart: true},
+		background: {color: android.graphics.Color.parseColor("#8cc8fa")}
+	},
+	
+	params: {slot: "molecular_slot"},
+	
+	drawing: [
+		{type: "bitmap", x: 345, y: 92, bitmap: "molecular_background", scale: GUI_SCALE},
+	],
+	
+	elements: {
+		"progressScale": {type: "scale", x: 390, y: 181, direction: 3, bitmap: "molecular_bar", scale: GUI_SCALE},
+		"slot1": {type: "slot", x: 374, y: 108, size: 64},
+		"slot2": {type: "slot", x: 374, y: 239, size: 64, isValid: function(){return false}},
+		"textInput": {type: "text", x: 520, y: 130},
+		"textOutput": {type: "text", x: 520, y: 170},
+		"textEnergy": {type: "text", x: 520, y: 210},
+		"textProgress": {type: "text", x: 520, y: 250},
+	}
+});
+
+ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
+	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
+
+	defaultValues: {
+		id: 0,
+		data: 0,
+		progress: 0,
+		energyNeed: 0
+	},
+	
+	getTier: function(){
+		return 14;
+	},
+
+	getGuiScreen: function(){
+		return guiMT;
+	},
+	
+	getTransportSlots: function(){
+		return {input: ["slot1"], output: ["slot2"]};
+	},
+	
+	destroy: function(){
+		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
+	},
+	
+	tick: function(){
+		if(!this.data.id || !this.data.energyNeed){
+			var slot1 = this.container.getSlot("slot1");
+			var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
+			if(result){
+				this.data.id = slot1.id;
+				this.data.data = slot1.data;
+			}
+		}else{
+			var result = ICore.Recipe.getRecipeResult("molecularTransformer", this.data.id, this.data.data);
+		}
+		if(result){
+			this.container.setText("textInput", "Input: " + Item.getName(this.data.id, this.data.data));
+			var itemName = Item.getName(result.id, result.data);
+			if(itemName[0] == '§') itemName = itemName.slice(2);
+			this.container.setText("textOutput", "Output: " + itemName);
+			this.container.setText("textEnergy", "Energy: " + result.energy);
+			this.container.setText("textProgress", "Progress: " + parseInt(this.data.progress / result.energy * 100) + "%");
+			this.container.setScale("progressScale", this.data.progress / result.energy);
+			if(this.data.last_energy_receive > 0){
+				this.emitter.emit(Particles.registerParticleType({
+					texture: "mt_work_" + (World.getThreadTime() & 15),
+					size: [2, 2],
+					lifetime: [4, 4],
+					render: 0
+				}), 0, this.x + 0.5, this.y + 0.5, this.z + 0.5);
+				var slot2 = this.container.getSlot("slot2");
+				if(this.data.progress >= result.energy && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))){
+					this.data.id = this.data.data = 0;
+					slot2.id = result.id;
+					slot2.data = result.data;
+					slot2.count++;
+					this.data.id = this.data.data = 0;
+					this.data.progress = this.data.energyNeed = 0;
+				}
+			}
+		}
+		else{
+			this.container.setScale("progressScale", 0);
+			this.container.setText("textInput", "Input:    ");
+			this.container.setText("textOutput", "Output:   ");
+			this.container.setText("textEnergy", "Energy:   ");
+			this.container.setText("textProgress", "Progress: ");
+		}
+	},
+	
+	energyReceive: function(type, amount, voltage) {
+		if(this.data.id){
+			if(!this.data.energyNeed){
+				var slot1 = this.container.getSlot("slot1");
+				var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
+				this.data.energyNeed = result.energy;
+				slot1.count--;
+				this.container.validateSlot("slot1");
+			}
+			if(this.data.progress < this.data.energyNeed){
+				this.data.progress += amount;
+				this.data.energy_receive += amount;
+				this.data.voltage = Math.max(this.data.voltage, voltage);
+				return amount;
+			}
+		}
+		return 0;
+	}
+});
+
+
+
+
+// file: items/components.js
+
 IDRegistry.genItemID("ingotIridium");
 Item.createItem("ingotIridium", "Iridium Ingot", {name: "ingot_iridium", meta: 0});
 
 IDRegistry.genItemID("ingotUranium");
-Item.createItem("ingotUranium", "Uranium Ingot", {name: "ingot_uranium", meta: 0});
+Item.createItem("ingotUranium", "Enriched Uranium Ingot", {name: "ingot_uranium", meta: 0});
 	
 Callback.addCallback("PreLoaded", function(){
 	ICore.Recipe.addRecipeFor("compressor", ItemID.iridiumChunk, {id: ItemID.ingotIridium, count: 1, data: 0})
-	ICore.Recipe.addRecipeFor("compressor", ItemID.uraniumChunk, {id: ItemID.ingotUranium, count: 1, data: 0})
+	ICore.Recipe.addRecipeFor("compressor", ItemID.uranium, {id: ItemID.ingotUranium, count: 1, data: 0})
 });
 
 IDRegistry.genItemID("ingotIrradiantUranium");
@@ -153,648 +799,235 @@ Recipes.addShaped({id: ItemID.quantumCore, count: 1, data: 0}, [
  ], ['a', ItemID.enrichedSunnariumAlloy, 0, 'b', 399, 0, 'c', 381, 0]);
 
 
+
+
+// file: items/adv_helmet.js
+
 IDRegistry.genItemID("advSolarHelmet");
-Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 625, texture: "armor/adv_solar_helmet_1.png", isTech: true});
-Player.addItemCreativeInv(ItemID.advSolarHelmet, 1, 1);
-ICore.ChargeRegistry.registerItem(ItemID.advSolarHelmet, 100000, 1, true, 160);
+Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: false});
+ChargeItemRegistry.registerItem(ItemID.advSolarHelmet, "Eu", 1000000, 3);
+Item.registerNameOverrideFunction(ItemID.advSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("advSolarHelmetUncharged");
-Item.createArmorItem("advSolarHelmetUncharged", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 2, durability: 625, texture: "armor/adv_solar_helmet_1.png", isTech: true});
-ICore.ChargeRegistry.registerItem(ItemID.advSolarHelmetUncharged, 100000, 1, true, 160);
+Item.createArmorItem("advSolarHelmetUncharged", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 2, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 3);
+Item.registerNameOverrideFunction(ItemID.advSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
-ICore.Recipe.registerRecipesFor("adv-armor-charge", {
-	"ItemID.advSolarHelmet": {charged: ItemID.advSolarHelmet, uncharged: ItemID.advSolarHelmetUncharged},
-	"ItemID.advSolarHelmetUncharged": {charged: ItemID.advSolarHelmet, uncharged: ItemID.advSolarHelmetUncharged},
-}, true);
+Recipes.addShaped({id: ItemID.advSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.advSolarHelmet)}, [
+	"asa",
+	"chc"
+], ['s', BlockID.ASP, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.nanoHelmet, -1, 'c', ItemID.cableGold2, 0], ChargeItemRegistry.transportEnergy);
 
-var ADV_ARMOR_FUNC_CHARGED = {
-	maxDamage: Item.getMaxDamage(ItemID.advSolarHelmet),
-	tick: function(slot, inventory){
-		ICore.UI.enableButton("button_nightvision")
-		var armor = ICore.Recipe.getRecipeResult("adv-armor-charge", slot.id);
-		if(slot.data > this.maxDamage - 5){
-			slot.id = armor.uncharged;
-			slot.data = this.maxDamage - 4;
-			return true;
+Recipes.addShaped({id: ItemID.quantumHelmet, count: 1, data: Item.getMaxDamage(ItemID.quantumHelmet)}, [
+	"a#a",
+	"bxb",
+	"cqc"
+], ['#', ItemID.storageLapotronCrystal, -1, 'x', ItemID.advSolarHelmet, -1, 'q', ItemID.hazmatHelmet, 0, 'a', ItemID.plateReinforcedIridium, 0, 'b', BlockID.reinforcedGlass, 0, 'c', ItemID.circuitAdvanced, 0], ChargeItemRegistry.transportEnergy);
+	
+
+ICore.Recipe.addRecipeFor("nano-armor-charge", ItemID.advSolarHelmet, {charged: ItemID.advSolarHelmet, uncharged: ItemID.advSolarHelmetUncharged});
+ICore.Recipe.addRecipeFor("nano-armor-charge", ItemID.advSolarHelmetUncharged, {charged: ItemID.advSolarHelmet, uncharged: ItemID.advSolarHelmetUncharged});
+
+ICore.UI.setArmorButton(ItemID.advSolarHelmet, "button_nightvision");
+
+var NANO_ARMOR_FUNCS = ICore.requireGlobal("NANO_ARMOR_FUNCS");
+function chargeArmor(genD, genN){
+	var time = World.getWorldTime()%24000;
+	var p = Player.getPosition();
+	if(GenerationUtils.canSeeSky(p.x, p.y, p.z)){
+		if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
+			var energy = genD;
+		}else{
+			var energy = genN;
 		}
-		else{
-			if(ICore.UI.nightvision){
-				if(World.getThreadTime()%4==0){slot.data++;}
-				var coords = Player.getPosition();
-				if(nativeGetLightLevel(coords.x, coords.y, coords.z)==15){
-					Entity.addEffect(Player.get(), MobEffect.blindness, 25, 1);
+		for(var i = 3; i >= 0; i--){
+			var armor = Player.getArmorSlot(i);
+			var energyAdd = ICore.ChargeRegistry.addEnergyTo(armor, "Eu", energy, energy, 4);
+			if(energyAdd > 0){
+				var armorID = Player.getArmorSlot(i).id;
+				if(armorID != armor.id){
+					Logger.Log("Error in getArmorSlot("+i+"): id " + armor.id + " != " + armorID, "ERROR");
+					continue;
 				}
-				Entity.addEffect(Player.get(), MobEffect.nightVision, 225, 1);
-				return true;
+				energy -= energyAdd;
+				Player.setArmorSlot(i, armor.id, 1, armor.data, armor.extra);
+				if(energy <= 0){
+					break;
+				}
 			}
-			return false;
 		}
 	}
-};
-
-var RECIPE_FUNC_TRANSPORT_ENERGY = function(api, field, result){
-	var energy = 0;
-	for(var i in field){
-		if(!ChargeItemRegistry.isFlashStorage(field[i].id)){
-			energy += ChargeItemRegistry.getEnergyFrom(field[i], 10000000, 3);
-		}
-		api.decreaseFieldSlot(i);
-	}
-	ChargeItemRegistry.addEnergyTo(result, energy, energy, 3);
 }
 
-Armor.registerFuncs("advSolarHelmet", ADV_ARMOR_FUNC_CHARGED);
-Armor.registerFuncs("advSolarHelmetUncharged", ADV_ARMOR_FUNC_CHARGED);
-
-Callback.addCallback("PostLoaded", function(){
-	Recipes.addShaped({id: ItemID.advSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.advSolarHelmet)}, [
-		"asa",
-		"chc"
-	], ['s', BlockID.advancedSolarPanel, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.nanoHelmet, -1, 'c', ItemID.cableGold2, 0], RECIPE_FUNC_TRANSPORT_ENERGY);
+Callback.addCallback("tick", function(){
+	if(World.getThreadTime()%20 == 0){
+		var slot = Player.getArmorSlot(0);
+		if(slot.id == ItemID.advSolarHelmet || slot.id == ItemID.advSolarHelmetUncharged){
+			chargeArmor(ASP.gen_day*20, ASP.gen_night*20);
+		}
+	}
 });
 
+Armor.registerFuncs("advSolarHelmet", NANO_ARMOR_FUNCS);
+Armor.registerFuncs("advSolarHelmetUncharged", NANO_ARMOR_FUNCS);
+
+
+
+
+// file: items/hybrid_helmet.js
 
 IDRegistry.genItemID("hybridSolarHelmet");
-Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 8333, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
-Player.addItemCreativeInv(ItemID.hybridSolarHelmet, 1, 1);
-ICore.ChargeRegistry.registerItem(ItemID.hybridSolarHelmet, 1000000, 1, true, 120);
+Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: false});
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 4);
+Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showRareItemStorage);
 
 IDRegistry.genItemID("hybridSolarHelmetUncharged");
-Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 8333, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
-ICore.ChargeRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, 1000000, 1, true, 120);
+Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 4);
+Item.registerNameOverrideFunction(ItemID.hybridSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
 
-ICore.Recipe.registerRecipesFor("hybrid-armor-charge", {
-	"ItemID.hybridSolarHelmet": {charged: ItemID.hybridSolarHelmet, uncharged: ItemID.hybridSolarHelmetUncharged},
-	"ItemID.hybridSolarHelmetUncharged": {charged: ItemID.hybridSolarHelmet, uncharged: ItemID.hybridSolarHelmetUncharged},
-}, true);
+Recipes.addShaped({id: ItemID.hybridSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.hybridSolarHelmet)}, [
+	"asa",
+	"chc"
+], ['s', BlockID.HSP, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], ICore.ChargeRegistry.transportEnergy);
 
-Callback.addCallback("PostLoaded", function(){
-	Recipes.addShaped({id: ItemID.hybridSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.hybridSolarHelmet)}, [
-		"asa",
-		"chc"
-	], ['s', BlockID.hybridSolarPanel, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], RECIPE_FUNC_TRANSPORT_ENERGY);
+
+ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.hybridSolarHelmet, {charged: ItemID.hybridSolarHelmet, uncharged: ItemID.hybridSolarHelmetUncharged});
+ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.hybridSolarHelmetUncharged, {charged: ItemID.hybridSolarHelmet, uncharged: ItemID.hybridSolarHelmetUncharged});
+
+ICore.UI.setArmorButton(ItemID.hybridSolarHelmet, "button_nightvision");
+
+var QUANTUM_ARMOR_FUNCS = ICore.requireGlobal("QUANTUM_ARMOR_FUNCS");
+
+Callback.addCallback("tick", function(){
+	if(World.getThreadTime()%20 == 0){
+		var slot = Player.getArmorSlot(0);
+		if(slot.id == ItemID.hybridSolarHelmet || slot.id == ItemID.hybridSolarHelmetUncharged){
+			chargeArmor(HSP.gen_day*20, HSP.gen_night*20);
+		}
+	}
 });
 
+Armor.registerFuncs("hybridSolarHelmet", QUANTUM_ARMOR_FUNCS);
+Armor.registerFuncs("hybridSolarHelmetUncharged", QUANTUM_ARMOR_FUNCS);
+
+
+
+
+// file: items/ultimate_helmet.js
 
 IDRegistry.genItemID("ultimateSolarHelmet");
-Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 8333, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
-Player.addItemCreativeInv(ItemID.ultimateSolarHelmet, 1, 1);
-ICore.ChargeRegistry.registerItem(ItemID.ultimateSolarHelmet, 1000000, 1, true, 120);
+Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: false});
+ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 4);
+Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showRareItemStorage);
 
 IDRegistry.genItemID("ultimateSolarHelmetUncharged");
-Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 8333, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
-ICore.ChargeRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, 1000000, 1, true, 120);
+Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 4);
+Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
 
-ICore.Recipe.registerRecipesFor("ultimate-armor-charge", {
-	"ItemID.ultimateSolarHelmet": {charged: ItemID.ultimateSolarHelmet, uncharged: ItemID.ultimateSolarHelmetUncharged},
-	"ItemID.ultimateSolarHelmetUncharged": {charged: ItemID.ultimateSolarHelmet, uncharged: ItemID.ultimateSolarHelmetUncharged},
-}, true);
+Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
+	"asa",
+	"chc"
+], ['s', BlockID.USP, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], ICore.ChargeRegistry.transportEnergy);
 
-Callback.addCallback("PostLoaded", function(){
-	Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
-		"asa",
-		"chc"
-	], ['s', BlockID.ultimateSolarPanel, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], RECIPE_FUNC_TRANSPORT_ENERGY);
-	
-	Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
-		"s",
-		"h"
-	], ['s', BlockID.ultimateSolarPanel, 0, 'h', ItemID.hybridSolarHelmet, -1], RECIPE_FUNC_TRANSPORT_ENERGY);
-});
+Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
+	"s",
+	"h"
+], ['s', BlockID.USP, 0, 'h', ItemID.hybridSolarHelmet, -1], ICore.ChargeRegistry.transportEnergy);
 
 
-IDRegistry.genBlockID("advancedSolarPanel");
-Block.createBlock("advancedSolarPanel", [
-	{name: "Advanced Solar Panel", texture: [["asp", 2], ["asp", 1], ["asp", 0], ["asp", 0], ["asp", 0], ["asp", 0]], inCreative: true}
-]);
+ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.ultimateSolarHelmet, {charged: ItemID.ultimateSolarHelmet, uncharged: ItemID.ultimateSolarHelmetUncharged});
+ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.ultimateSolarHelmetUncharged, {charged: ItemID.ultimateSolarHelmet, uncharged: ItemID.ultimateSolarHelmetUncharged});
 
-var ASP = {
-	gen_day: __config__.access("advanced_solar_panel.gen_day"),
-	gen_night: __config__.access("advanced_solar_panel.gen_night"),
-	output: __config__.access("advanced_solar_panel.output"),
-	energy_storage: __config__.access("advanced_solar_panel.storage")
-}
+ICore.UI.setArmorButton(ItemID.ultimateSolarHelmet, "button_nightvision");
 
-var guiAdvancedSolarPanel = new UI.StandartWindow({
-	standart: {
-		header: {text: {text: "Advanced Solar Panel"}},
-		inventory: {standart: true},
-		background: {standart: true}
-	},
-	
-	drawing: [
-		{type: "background", color: android.graphics.Color.rgb(53, 53, 53)},
-		{type: "bitmap", x: 360, y: 40, bitmap: "ASP_gui", scale: 2.1},
-	],
-	
-	elements: {
-		"energyScale": {type: "scale", x: 398, y: 90, direction: 0, value: 0.5, bitmap: "ASP_energybar", scale: 2.1},
-		"slot1": {type: "slot", x: 390, y: 212, bitmap: "slotbg", size: 50},
-		"slot2": {type: "slot", x: 440, y: 212, bitmap: "slotbg", size: 50},
-		"slot3": {type: "slot", x: 490, y: 212, bitmap: "slotbg", size: 50},
-		"slot4": {type: "slot", x: 540, y: 212, bitmap: "slotbg", size: 50},
-		"textStorage": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 75, width: 300, height: 50, text: "Storage:"},
-		"textInfo1": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 615, y: 76, width: 300, height: 50, text: "/32000"},
-		"textOutput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 120, width: 300, height: 20, text: "Max Output: " + ASP.output + " EU/t"},
-		"textGen": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 134, width: 300, height: 39, text: "Generating:"},
-		"light": {type: "image", x: 425, y: 135, bitmap: "dark", scale: 2.1}
+Callback.addCallback("tick", function(){
+	if(World.getThreadTime()%20 == 0){
+		var slot = Player.getArmorSlot(0);
+		if(slot.id == ItemID.ultimateSolarHelmet || slot.id == ItemID.ultimateSolarHelmetUncharged){
+			chargeArmor(USP.gen_day*20, USP.gen_night*20);
+		}
 	}
 });
 
-
-ICore.Machine.registerPrototype(BlockID.advancedSolarPanel, {
-	getEnergyStorage: function(){
-		return ASP.energy_storage;
-	},
-	
-	getGuiScreen: function(){
-		return guiAdvancedSolarPanel;
-	},
-	
-	tick: function(){
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot1"), this.data.energy, ASP.output, 0);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot2"), this.data.energy, ASP.output, 0);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot3"), this.data.energy, ASP.output, 0);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot4"), this.data.energy, ASP.output, 0);
-		
-		var energyStorage = this.getEnergyStorage()
-		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
-	},
-	
-	isGenerator: function() {
-		return true;
-	},
-	
-	energyTick: function(type, src){
-		var content = this.container.getGuiContent();
-		if(World.canSeeSky(this.x, this.y + 1, this.z)){
-			if(nativeGetLightLevel(this.x, this.y + 1, this.z) == 15){
-				this.data.energy = Math.min(this.data.energy + ASP.gen_day, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + ASP.gen_day + " EU/t"); 
-				if(content){ 
-				content.elements["light"].bitmap = "sun";}
-			}
-			else{
-				this.data.energy = Math.min(this.data.energy + ASP.gen_night, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + ASP.gen_night + " EU/t");
-				if(content){
-				content.elements["light"].bitmap = "moon";}
-			}
-		}
-		else{
-			this.container.setText("textGen", "Generating: 0 EU/t");
-			if(content){
-			content.elements["light"].bitmap = "dark";}
-		}
-		var output = Math.min(ASP.output, this.data.energy);
-		this.data.energy += src.add(output) - output;
-	}
-});
+Armor.registerFuncs("ultimateSolarHelmet", QUANTUM_ARMOR_FUNCS);
+Armor.registerFuncs("ultimateSolarHelmetUncharged", QUANTUM_ARMOR_FUNCS);
 
 
-IDRegistry.genBlockID("hybridSolarPanel");
-Block.createBlock("hybridSolarPanel", [
-	{name: "Hybrid Solar Panel", texture: [["hsp", 2], ["hsp", 1], ["hsp", 0], ["hsp", 0], ["hsp", 0], ["hsp", 0]], inCreative: true}
-]);
-
-var HSP = {
-	gen_day: __config__.access("hybrid_solar_panel.gen_day"),
-	gen_night: __config__.access("hybrid_solar_panel.gen_night"),
-	output: __config__.access("hybrid_solar_panel.output"),
-	energy_storage: __config__.access("hybrid_solar_panel.storage")
-}
-
-var guiHybridSolarPanel = new UI.StandartWindow({
-	standart: {
-		header: {text: {text: "Hybrid Solar Panel"}},
-		inventory: {standart: true},
-		background: {standart: true}
-	},
-	
-	drawing: [
-		{type: "background", color: android.graphics.Color.rgb(53, 53, 53)},
-		{type: "bitmap", x: 360, y: 40, bitmap: "ASP_gui", scale: 2.1},
-	],
-	
-	elements: {
-		"energyScale": {type: "scale", x: 398, y: 90, direction: 0, value: 0.5, bitmap: "ASP_energybar", scale: 2.1},
-		"slot1": {type: "slot", x: 390, y: 212, bitmap: "slotbg", size: 50},
-		"slot2": {type: "slot", x: 440, y: 212, bitmap: "slotbg", size: 50},
-		"slot3": {type: "slot", x: 490, y: 212, bitmap: "slotbg", size: 50},
-		"slot4": {type: "slot", x: 540, y: 212, bitmap: "slotbg", size: 50},
-		"textStorage": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 75, width: 300, height: 50, text: "Storage:"},
-		"textInfo1": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 615, y: 76, width: 300, height: 50, text: "/100000"},
-		"textOutput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 120, width: 300, height: 20, text: "Max Output: " + HSP.output + " EU/t"},
-		"textGen": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 134, width: 300, height: 39, text: "Generating:"},
-		"light": {type: "image", x: 425, y: 135, bitmap: "dark", scale: 2.1}
-	}
-});
 
 
-ICore.Machine.registerPrototype(BlockID.hybridSolarPanel, {
-	getEnergyStorage: function(){
-		return HSP.energy_storage;
-	},
-	
-	getGuiScreen: function(){
-		return guiHybridSolarPanel;
-	},
-	
-	tick: function(){
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot1"), this.data.energy, HSP.output, 1);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot2"), this.data.energy, HSP.output, 1);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot3"), this.data.energy, HSP.output, 1);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot4"), this.data.energy, HSP.output, 1);
-		
-		var energyStorage = this.getEnergyStorage()
-		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
-	},
-	
-	energyTick: function(type, src){
-		var content = this.container.getGuiContent();
-		if(World.canSeeSky(this.x, this.y + 1, this.z)){
-			if(nativeGetLightLevel(this.x, this.y + 1, this.z) == 15){
-				this.data.energy = Math.min(this.data.energy + HSP.gen_day, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + HSP.gen_day + " EU/t"); 
-				if(content){ 
-				content.elements["light"].bitmap = "sun";}
-			}
-			else{
-				this.data.energy = Math.min(this.data.energy + HSP.gen_night, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + HSP.gen_night + " EU/t");
-				if(content){
-				content.elements["light"].bitmap = "moon";}
-			}
-		}
-		else{
-			this.container.setText("textGen", "Generating: 0 EU/t");
-			if(content){
-			content.elements["light"].bitmap = "dark";}
-		}
-		var output = Math.min(HSP.output, this.data.energy);
-		this.data.energy += src.add(output) - output;
-	}
-});
+// file: recipes.js
 
+Recipes.addShapeless({id: BlockID.HSP, count: 8, data: 0}, [{id: BlockID.USP, data: 0}]);
 
-IDRegistry.genBlockID("ultimateSolarPanel");
-Block.createBlock("ultimateSolarPanel", [
-	{name: "Ultimate Solar Panel", texture: [["usp", 2], ["usp", 1], ["usp", 0], ["usp", 0], ["usp", 0], ["usp", 0]], inCreative: true}
-]);
-
-var USP = {
-	gen_day: __config__.access("ultimate_solar_panel.gen_day"),
-	gen_night: __config__.access("ultimate_solar_panel.gen_night"),
-	output: __config__.access("ultimate_solar_panel.output"),
-	energy_storage: __config__.access("ultimate_solar_panel.storage")
-}
-
-var guiUltimateHybridSolarPanel = new UI.StandartWindow({
-	standart: {
-		header: {text: {text: "Ultimate Solar Panel"}},
-		inventory: {standart: true},
-		background: {standart: true}
-	},
-	
-	drawing: [
-		{type: "background", color: android.graphics.Color.rgb(53, 53, 53)},
-		{type: "bitmap", x: 360, y: 40, bitmap: "ASP_gui", scale: 2.1},
-	],
-	
-	elements: {
-		"energyScale": {type: "scale", x: 398, y: 90, direction: 0, value: 0.5, bitmap: "ASP_energybar", scale: 2.1},
-		"slot1": {type: "slot", x: 390, y: 212, bitmap: "slotbg", size: 50},
-		"slot2": {type: "slot", x: 440, y: 212, bitmap: "slotbg", size: 50},
-		"slot3": {type: "slot", x: 490, y: 212, bitmap: "slotbg", size: 50},
-		"slot4": {type: "slot", x: 540, y: 212, bitmap: "slotbg", size: 50},
-		"textStorage": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 75, width: 300, height: 50, text: "Storage:"},
-		"textInfo1": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 615, y: 76, width: 300, height: 50, text: "/1000000"},
-		"textOutput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 120, width: 300, height: 20, text: "Max Output: " + USP.output + " EU/t"},
-		"textGen": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 134, width: 300, height: 39, text: "Generating:"},
-		"light": {type: "image", x: 425, y: 135, bitmap: "dark", scale: 2.1}
-	}
-});
-
-
-ICore.Machine.registerPrototype(BlockID.ultimateSolarPanel, {
-	getEnergyStorage: function(){
-		return USP.energy_storage;
-	},
-	
-	getGuiScreen: function(){
-		return guiUltimateHybridSolarPanel;
-	},
-	
-	tick: function(){
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot1"), this.data.energy, USP.output, 2);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot2"), this.data.energy, USP.output, 2);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot3"), this.data.energy, USP.output, 2);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot4"), this.data.energy, USP.output, 2);
-		
-		var energyStorage = this.getEnergyStorage()
-		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
-	},
-	
-	isGenerator: function() {
-		return true;
-	},
-	
-	energyTick: function(type, src){
-		var content = this.container.getGuiContent();
-		if(World.canSeeSky(this.x, this.y + 1, this.z)){
-			if(nativeGetLightLevel(this.x, this.y + 1, this.z) == 15){
-				this.data.energy = Math.min(this.data.energy + USP.gen_day, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + USP.gen_day + " EU/t"); 
-				if(content){ 
-				content.elements["light"].bitmap = "sun";}
-			}
-			else{
-				this.data.energy = Math.min(this.data.energy + USP.gen_night, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + USP.gen_night + " EU/t");
-				if(content){
-				content.elements["light"].bitmap = "moon";}
-			}
-		}
-		else{
-			this.container.setText("textGen", "Generating: 0 EU/t");
-			if(content){
-			content.elements["light"].bitmap = "dark";}
-		}
-		var output = Math.min(USP.output, this.data.energy);
-		this.data.energy += src.add(output) - output;
-	}
-});
-
-
-IDRegistry.genBlockID("quantumSolarPanel");
-Block.createBlock("quantumSolarPanel", [
-	{name: "Quantum Solar Panel", texture: [["qsp", 2], ["qsp", 1], ["qsp", 0], ["qsp", 0], ["qsp", 0], ["qsp", 0]], inCreative: true}
-]);
-
-var QSP = {
-	gen_day: __config__.access("quantum_solar_panel.gen_day"),
-	gen_night: __config__.access("quantum_solar_panel.gen_night"),
-	output: __config__.access("quantum_solar_panel.output"),
-	energy_storage: __config__.access("quantum_solar_panel.storage")
-}
-
-var guiQuantumSolarPanel = new UI.StandartWindow({
-	standart: {
-		header: {text: {text: "Quantum Solar Panel"}},
-		inventory: {standart: true},
-		background: {standart: true}
-	},
-	
-	drawing: [
-		{type: "background", color: android.graphics.Color.rgb(53, 53, 53)},
-		{type: "bitmap", x: 360, y: 40, bitmap: "ASP_gui", scale: 2.1},
-	],
-	
-	elements: {
-		"energyScale": {type: "scale", x: 398, y: 90, direction: 0, value: 0.5, bitmap: "ASP_energybar", scale: 2.1},
-		"slot1": {type: "slot", x: 390, y: 212, bitmap: "slotbg", size: 50},
-		"slot2": {type: "slot", x: 440, y: 212, bitmap: "slotbg", size: 50},
-		"slot3": {type: "slot", x: 490, y: 212, bitmap: "slotbg", size: 50},
-		"slot4": {type: "slot", x: 540, y: 212, bitmap: "slotbg", size: 50},
-		"textStorage": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 75, width: 300, height: 50, text: "Storage:"},
-		"textInfo1": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 615, y: 76, width: 300, height: 50, text: "/10000000"},
-		"textOutput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 120, width: 300, height: 20, text: "Max Output: " + QSP.output + " EU/t"},
-		"textGen": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 134, width: 300, height: 39, text: "Generating:"},
-		"light": {type: "image", x: 425, y: 135, bitmap: "dark", scale: 2.1}
-	}
-});
-
-ICore.Machine.registerPrototype(BlockID.quantumSolarPanel, {
-	getEnergyStorage: function(){
-		return QSP.energy_storage;
-	},
-	
-	getGuiScreen: function(){
-		return guiQuantumSolarPanel;
-	},
-	
-	tick: function(){
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot1"), this.data.energy, QSP.output, 3);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot2"), this.data.energy, QSP.output, 3);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot3"), this.data.energy, QSP.output, 3);
-		this.data.energy -= ICore.ChargeRegistry.addEnergyTo(this.container.getSlot("slot4"), this.data.energy, QSP.output, 3);
-		
-		var energyStorage = this.getEnergyStorage()
-		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
-	},
-	
-	energyTick: function(type, src){
-		var content = this.container.getGuiContent();
-		if(World.canSeeSky(this.x, this.y + 1, this.z)){
-			if(nativeGetLightLevel(this.x, this.y + 1, this.z) == 15){
-				this.data.energy = Math.min(this.data.energy + QSP.gen_day, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + QSP.gen_day + " EU/t"); 
-				if(content){ 
-				content.elements["light"].bitmap = "sun";}
-			}
-			else{
-				this.data.energy = Math.min(this.data.energy + QSP.gen_night, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + QSP.gen_night + " EU/t");
-				if(content){
-				content.elements["light"].bitmap = "moon";}
-			}
-		}
-		else{
-			this.container.setText("textGen", "Generating: 0 EU/t");
-			if(content){
-			content.elements["light"].bitmap = "dark";}
-		}
-		var output = Math.min(QSP.output, this.data.energy);
-		this.data.energy += src.add(output) - output;
-	}
-});
-
-
-IDRegistry.genBlockID("molecularTransformer");
-Block.createBlock("molecularTransformer", [
-	{name: "Molecular Transformer", texture: [["mt", 2], ["mt", 1], ["mt", 0], ["mt", 3], ["mt", 0], ["mt", 0]], inCreative: true}
-]);
-/*
-var molecularTransformerRenderer = new TileRenderModel(BlockID.molecularTransformer, 0);
-molecularTransformerRenderer.addBox(.25, 0, .25, .75, 1, .75);
-molecularTransformerRenderer.addBox(0, 0, 0, .25, .125, .25);
-molecularTransformerRenderer.addBox(.75, 0, .25, 1, .125, .25);
-molecularTransformerRenderer.addBox(.375, 0, .75, .625, .125, 1);
-molecularTransformerRenderer.addBox(0, 0, .875, .25, 1, .25);
-molecularTransformerRenderer.addBox(.75, .875, .25, 1, 1, .25);
-molecularTransformerRenderer.addBox(.375, .875, .75, .625, 1, 1);
-*/
-Block.setBlockShape(BlockID.molecularTransformer, {x: 0.25, y: 0, z: 0.25}, {x: 0.75, y: 0.875, z: 0.75});
-
-Recipes.addShaped({id: BlockID.molecularTransformer, count: 1, data: 0}, [
- "axa",
- "bcb", 
- "axa"
- ], ['a', BlockID.machineBlockAdvanced, 0, 'b', ItemID.circuitAdvanced, 0, 'c', ItemID.mtCore, 0, 'x', ItemID.storageLapotronCrystal, -1]);
-
-//UI.addItemOverride(BlockID.molecularTransformer, 0, "mt")
-
-var guiMolecularTransformer = new UI.StandartWindow({
-	standart: {
-		header: {text: {text: "Molecular Transformer"}},
-		inventory: {standart: true},
-		background: {standart: true}
-	},
-	
-	drawing: [
-		{type: "bitmap", x: 360, y: 40, bitmap: "ASP_molecular_transformer_gui", scale: 2.1},
-	],
-	
-	elements: {
-		"progressScale": {type: "scale", x: 408, y: 140.8, direction: 3, bitmap: "ASP_molecular_progressbar", scale: 2.1},
-		"slot1": {type: "slot", x: 398, y: 88, bitmap: "slotmt", size: 43},
-		"slot2": {type: "slot", x: 398, y: 183, bitmap: "slotmt", size: 43},
-		"textInput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 75, width: 300, height: 50, text: "Input:"},
-		"textOutput": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 120, width: 300, height: 20, text: "Output:"},
-		"textEnergy": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 134, width: 300, height: 39, text: "Energy:"},
-		"textProgress": {font: {color: android.graphics.Color.WHITE, shadow: 0.6, size: 18}, type: "text", x: 515, y: 159, width: 300, height: 39, text: "Progress:"},
-	}
-});
-
-ICore.Recipe.registerRecipesFor("molecularTransformer", {
-	"397:1": {id: 399, count: 1, data: 0, energy: 250000000},
-	265: {id: ItemID.iridiumChunk, count: 1, data: 0, energy: 9000000},
-	87: {id: 289, count: 2, data: 0, energy: 70000},
-	12: {id: 13, count: 1, data: 0, energy: 50000},
-	3: {id: 82, count: 1, data: 0, energy: 50000},
-	"263:1": {id: 263, count: 1, data: 0, energy: 60000},
-	348: {id: ItemID.sunnariumPart, count: 1, data: 0, energy: 1000000},
-	89: {id: ItemID.sunnarium, count: 1, data: 0, energy: 9000000},
-	"35:4": {id: 89, count: 1, data: 0, energy: 500000},
-	"35:11": {id: 22, count: 1, data: 0, energy: 500000},
-	"35:14": {id: 152, count: 1, data: 0, energy: 500000},
-	"263:0": {id: 264, count: 1, data: 0, energy: 9000000},
-	//"ItemID.ingotTin": {id: ItemID.ingotSilver, count: 1, data: 0, energy: 500000},
-	//"ItemID.ingotSilver": {id: 266, count: 1, data: 0, energy: 500000},
-}, false);
-
-ICore.Machine.registerPrototype(BlockID.molecularTransformer, {
-	defaultValues: {
-		progress: 0,
-	},
-	
-	getEnergyStorage: function(){
-		return 8192;
-	},
-	
-	getGuiScreen: function(){
-		return guiMolecularTransformer;
-	},
-	
-	tick: function(){
-		var sourceSlot = this.container.getSlot("slot1");
-		var result = ICore.Recipe.getRecipeResult("molecularTransformer", sourceSlot.id) || ICore.Recipe.getRecipeResult("molecularTransformer", sourceSlot.id+":"+sourceSlot.data);
-		if(result){
-			this.container.setText("textInput", "Input: " + Item.getName(sourceSlot.id, sourceSlot.data));
-			this.container.setText("textOutput", "Output: " + Item.getName(result.id, result.data));
-			this.container.setText("textEnergy", "Energy: " + result.energy);
-			this.container.setText("textProgress", "Progress: " + parseInt(this.data.progress / result.energy * 100) + "%");
-			var resultSlot = this.container.getSlot("slot2");
-			if(resultSlot.id == result.id && resultSlot.data == result.data && resultSlot.count + result.count <= 64 || resultSlot.id == 0){
-				var transfer = Math.min(this.data.energy, result.energy - this.data.progress);
-				this.data.progress += transfer;
-				this.data.energy -= transfer;
-				this.container.setScale("progressScale", this.data.progress / result.energy);
-				if(this.data.progress >= result.energy){
-					sourceSlot.count--;
-					resultSlot.id = result.id;
-					resultSlot.data = result.data;
-					resultSlot.count++;
-					this.container.validateAll();
-					this.data.progress = 0;
-				}
-			}
-		}
-		else{
-			this.data.progress = 0;
-			this.container.setScale("progressScale", 0);
-			this.container.setText("textInput", "Input:    ");
-			this.container.setText("textOutput", "Output:   ");
-			this.container.setText("textEnergy", "Energy:   ");
-			this.container.setText("textProgress", "Progress: ");
-		}
-	},
-	
-	energyTick: ICore.Machine.basicEnergyReceiveFunc
-});
-
-
-Recipes.addShapeless({id: BlockID.hybridSolar, count: 8, data: 0}, [{id: BlockID.ultimateSolar, data: -1}]);
-
-Recipes.addShaped({id: BlockID.ultimateSolarPanel, count: 1, data: 0}, [
+Recipes.addShaped({id: BlockID.USP, count: 1, data: 0}, [
  "aaa",
  "aba",
  "aaa"
- ], ['a', BlockID.hybridSolarPanel, 0, 'b', ItemID.circuitAdvanced, 0]);
+], ['a', BlockID.HSP, 0, 'b', ItemID.circuitAdvanced, 0]);
  
- Recipes.addShaped({id: BlockID.quantumSolarPanel, count: 1, data: 0}, [
+Recipes.addShaped({id: BlockID.QSP, count: 1, data: 0}, [
  "aaa",
  "aba",
  "aaa"
- ], ['a', BlockID.ultimateSolarPanel, 0, 'b', ItemID.quantumCore, 0]);
+], ['a', BlockID.USP, 0, 'b', ItemID.quantumCore, 0]);
 
-if(__config__.access("hard_recipes")){
-	if(__config__.access("simple_asp_recipe")){
-		Recipes.replaceWithShaped({id: BlockID.advancedSolarPanel, count: 1, data: 0}, [
+if(__config__.getBool("hard_recipes")){
+	if(__config__.getBool("simple_asp_recipe")){
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
 		 "aaa", 
 		 "bxb", 
 		 "cdc"
-		], ['x', BlockID.solarPanel, -1, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, "d", BlockID.machineBlockAdvanced, 0]);
+		], ['x', BlockID.solarPanel, -1, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', BlockID.machineBlockAdvanced, 0]);
 	}else{
-		Recipes.addShaped({id: BlockID.advancedSolarPanel, count: 1, data: 0}, [
-		"aaa", 
-		"bxb", 
-		"cdc"
-		], ['x', BlockID.solarPanel, 0, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, "d", ItemID.plateIrradiantReinforced, 0]);
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
+		 "aaa", 
+		 "bxb", 
+		 "cdc"
+		], ['x', BlockID.solarPanel, 0, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', ItemID.plateIrradiantReinforced, 0]);
 	}
 	
-	Recipes.addShaped({id: BlockID.hybridSolarPanel, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.HSP, count: 1, data: 0}, [
 	 "afa",
 	 "bxb",
 	 "cdc"
-	 ], ["f", 22, -1, 'x', BlockID.advancedSolarPanel, 0, 'b', ItemID.plateReinforcedIridium, 0, 'c', ItemID.circuitAdvanced, 0, 'a', ItemID.carbonPlate, 0, "d", ItemID.enrichedSunnarium, 0]);
+	], ["f", 22, -1, 'x', BlockID.ASP, 0, 'b', ItemID.plateReinforcedIridium, 0, 'c', ItemID.circuitAdvanced, 0, 'a', ItemID.carbonPlate, 0, 'd', ItemID.enrichedSunnarium, 0]);
 
-	Recipes.addShaped({id: BlockID.ultimateSolarPanel, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.USP, count: 1, data: 0}, [
 	 " a ", 
 	 "bxb", 
 	 "cbc"
-	 ], ['a', 22, -1, 'x', BlockID.advancedSolarPanel, 0, 'b', ItemID.coalChunk, 0, 'c', ItemID.enrichedSunnariumAlloy, 0]);
+	], ['a', 22, -1, 'x', BlockID.ASP, 0, 'b', ItemID.coalChunk, 0, 'c', ItemID.enrichedSunnariumAlloy, 0]);
 }
 else{
-	if(__config__.access("simple_asp_recipe")){
-		Recipes.replaceWithShaped({id: BlockID.advancedSolarPanel, count: 1, data: 0}, [
+	if(__config__.getBool("simple_asp_recipe")){
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
 		 "aaa", 
 		 "bxb", 
 		 "cdc"
-		], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, "d", BlockID.machineBlockAdvanced, 0]);
+		], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', BlockID.machineBlockAdvanced, 0]);
 	}else{
-		Recipes.addShaped({id: BlockID.advancedSolarPanel, count: 1, data: 0}, [
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
 		 "aaa", 
 		 "bxb", 
 		 "cdc"
-		], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, "d", ItemID.plateIrradiantReinforced, 0]);
+		], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', ItemID.plateIrradiantReinforced, 0]);
 	}
 	
-	Recipes.addShaped({id: BlockID.hybridSolarPanel, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.HSP, count: 1, data: 0}, [
 	 "afa",
 	 "bxb",
 	 "cdc"
-	 ], ["f", 22, -1, 'x', BlockID.advancedSolarPanel, 0, 'b', ItemID.plateReinforcedIridium, 0, 'c', ItemID.circuitAdvanced, 0, 'a', ItemID.carbonPlate, 0, "d", ItemID.sunnarium, 0]);
+	], ["f", 22, -1, 'x', BlockID.ASP, 0, 'b', ItemID.plateReinforcedIridium, 0, 'c', ItemID.circuitAdvanced, 0, 'a', ItemID.carbonPlate, 0, 'd', ItemID.sunnarium, 0]);
 	 
-	Recipes.addShaped({id: BlockID.ultimateSolarPanel, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.USP, count: 1, data: 0}, [
 	 " a ", 
 	 "bxb", 
 	 "cbc"
-	 ], ['a', 22, -1, 'x', BlockID.advancedSolarPanel, 0, 'b', ItemID.coalChunk, 0, 'c', ItemID.sunnariumAlloy, 0]);
+	], ['a', 22, -1, 'x', BlockID.ASP, 0, 'b', ItemID.coalChunk, 0, 'c', ItemID.sunnariumAlloy, 0]);
 }
+
+
 
 

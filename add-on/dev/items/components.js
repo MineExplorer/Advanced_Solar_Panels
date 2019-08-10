@@ -2,11 +2,11 @@ IDRegistry.genItemID("ingotIridium");
 Item.createItem("ingotIridium", "Iridium Ingot", {name: "ingot_iridium", meta: 0});
 
 IDRegistry.genItemID("ingotUranium");
-Item.createItem("ingotUranium", "Uranium Ingot", {name: "ingot_uranium", meta: 0});
+Item.createItem("ingotUranium", "Enriched Uranium Ingot", {name: "ingot_uranium", meta: 0});
 	
 Callback.addCallback("PreLoaded", function(){
 	ICore.Recipe.addRecipeFor("compressor", ItemID.iridiumChunk, {id: ItemID.ingotIridium, count: 1, data: 0})
-	ICore.Recipe.addRecipeFor("compressor", ItemID.uraniumChunk, {id: ItemID.ingotUranium, count: 1, data: 0})
+	ICore.Recipe.addRecipeFor("compressor", ItemID.uranium, {id: ItemID.ingotUranium, count: 1, data: 0})
 });
 
 IDRegistry.genItemID("ingotIrradiantUranium");
