@@ -599,6 +599,16 @@ var guiMT = new UI.StandartWindow({
 	}
 });
 
+var MTParticles = [];
+for(let i = 0; i < 16; i++){
+	MTParticles.push(Particles.registerParticleType({
+		texture: "mt_work_" + i,
+		size: [2, 2],
+		lifetime: [4, 4],
+		render: 0
+	}));
+}
+
 ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
 
@@ -645,12 +655,7 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 			this.container.setText("textProgress", "Progress: " + parseInt(this.data.progress / result.energy * 100) + "%");
 			this.container.setScale("progressScale", this.data.progress / result.energy);
 			if(this.data.last_energy_receive > 0){
-				this.emitter.emit(Particles.registerParticleType({
-					texture: "mt_work_" + (World.getThreadTime() & 15),
-					size: [2, 2],
-					lifetime: [4, 4],
-					render: 0
-				}), 0, this.x + 0.5, this.y + 0.5, this.z + 0.5);
+				this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, this.x + 0.5, this.y + 0.5, this.z + 0.5);
 				var slot2 = this.container.getSlot("slot2");
 				if(this.data.progress >= result.energy && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))){
 					this.data.id = this.data.data = 0;
@@ -680,12 +685,11 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 				slot1.count--;
 				this.container.validateSlot("slot1");
 			}
-			if(this.data.progress < this.data.energyNeed){
-				this.data.progress += amount;
-				this.data.energy_receive += amount;
-				this.data.voltage = Math.max(this.data.voltage, voltage);
-				return amount;
-			}
+			var add = Math.min(amount, this.data.energyNeed - this.data.progress);
+			this.data.progress += add;
+			this.data.energy_receive += add;
+			this.data.voltage = Math.max(this.data.voltage, voltage);
+			return add;
 		}
 		return 0;
 	}
