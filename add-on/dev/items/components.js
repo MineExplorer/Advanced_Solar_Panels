@@ -90,7 +90,7 @@ Recipes.addShaped({id: ItemID.mtCore, count: 1, data: 0}, [
  "aba",
  "a a",
  "aba"
- ], ['a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0]);
+ ], ['a', ItemID.irradiantGlass, 0, 'b', ItemID.neutronReflectorThick, 0]);
 
 IDRegistry.genItemID("quantumCore");
 Item.createItem("quantumCore", "Quantum Core", {name: "quantum_core", meta: 0});

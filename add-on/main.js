@@ -792,7 +792,7 @@ Recipes.addShaped({id: ItemID.mtCore, count: 1, data: 0}, [
  "aba",
  "a a",
  "aba"
- ], ['a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0]);
+ ], ['a', ItemID.irradiantGlass, 0, 'b', ItemID.neutronReflectorThick, 0]);
 
 IDRegistry.genItemID("quantumCore");
 Item.createItem("quantumCore", "Quantum Core", {name: "quantum_core", meta: 0});
@@ -810,11 +810,13 @@ Recipes.addShaped({id: ItemID.quantumCore, count: 1, data: 0}, [
 IDRegistry.genItemID("advSolarHelmet");
 Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: false});
 ChargeItemRegistry.registerItem(ItemID.advSolarHelmet, "Eu", 1000000, 3);
+ICore.ItemName.setRarity(ItemID.advSolarHelmet, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("advSolarHelmetUncharged");
 Item.createArmorItem("advSolarHelmetUncharged", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 2, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 3);
+ICore.ItemName.setRarity(ItemID.advSolarHelmetUncharged, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
 Recipes.addShaped({id: ItemID.advSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.advSolarHelmet)}, [
@@ -883,12 +885,14 @@ Armor.registerFuncs("advSolarHelmetUncharged", NANO_ARMOR_FUNCS);
 IDRegistry.genItemID("hybridSolarHelmet");
 Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: false});
 ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 4);
-Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showRareItemStorage);
+ICore.ItemName.setRarity(ItemID.hybridSolarHelmet, 2);
+Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("hybridSolarHelmetUncharged");
 Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 4);
-Item.registerNameOverrideFunction(ItemID.hybridSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
+ICore.ItemName.setRarity(ItemID.hybridSolarHelmetUncharged, 2);
+Item.registerNameOverrideFunction(ItemID.hybridSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
 Recipes.addShaped({id: ItemID.hybridSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.hybridSolarHelmet)}, [
 	"asa",
@@ -923,11 +927,13 @@ Armor.registerFuncs("hybridSolarHelmetUncharged", QUANTUM_ARMOR_FUNCS);
 IDRegistry.genItemID("ultimateSolarHelmet");
 Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: false});
 ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 4);
+ICore.ItemName.setRarity(ItemID.ultimateSolarHelmet, 2);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showRareItemStorage);
 
 IDRegistry.genItemID("ultimateSolarHelmetUncharged");
 Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 4);
+ICore.ItemName.setRarity(ItemID.ultimateSolarHelmetUncharged, 2);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
 
 Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
