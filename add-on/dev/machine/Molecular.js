@@ -1,15 +1,78 @@
 IDRegistry.genBlockID("molecular_transformer");
 Block.createBlock("molecular_transformer", [{name: "", texture: []}]);
 
-(function(){
-  const mesh = new RenderMesh();
-  mesh.setBlockTexture("molecular_transformer", 0);
-  mesh.importFromFile(__dir__ + "res/molecular_transformer.obj", "obj", null);
-  const model = new BlockRenderer.Model(mesh);
-  const render = new ICRender.Model();
-  render.addEntry(model);
-  BlockRenderer.setStaticICRender(BlockID.molecular_transformer, 0, render);
-})();
+const mtRender = new Render();
+
+mtRender.setPart("body", [
+	{//coreBottom
+		type: "box",
+		uv: {x: 0, y: 0},
+		coords: {x: 0, y: 5.5, z: 0},
+		size: {x: 10, y: 3, z: 10}
+	},
+	{//coreWorkZone
+		type: "box",
+		uv: {x: 40, y: 0},
+		coords: {x: 0, y: 0.5, z: 0},
+		size: {x: 6, y: 9, z: 6}
+	},
+	{//coreTopElectr
+		type: "box",
+		uv: {x: 18, y: 29},
+		coords: {x: -0.5, y: -7, z: 0.033333},
+		size: {x: 3, y: 2, z: 3}
+	},
+	{//coreTopPlate
+		type: "box",
+		uv: {x: 0, y: 15},
+		coords: {x: -0.5, y: -5.5, z: 0},
+		size: {x: 9, y: 3, z: 9}
+	},
+	{//firstElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//firstElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {width: 64, height: 40});
+
+mtRender.getPart("body").addPart("second");
+mtRender.setPart("second", [
+	{//secondElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//secondElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {rotation: {y: -Math.PI * 2 / 3}, width: 64, height: 40});
+
+mtRender.getPart("body").addPart("third");
+mtRender.setPart("third", [
+	{//thirdElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//thirdElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {rotation: {y: Math.PI * 2 / 3}, width: 64, height: 40});
 
 IDRegistry.genItemID("molecular_transformer");
 Item.createItem("molecular_transformer", "Molecular Transformer", {name: "molecular_transformer"});
@@ -107,6 +170,8 @@ for(let i = 0; i < 16; i++){
 }
 
 ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
+	
+	anim: null,
 	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
 
 	defaultValues: {
@@ -128,8 +193,22 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 		return {input: ["slot1"], output: ["slot2"]};
 	},
 	
+	init: function(){
+		this.anim = new Animation.Base(this.x + 0.5, this.y - 1, this.z + 0.5);
+		this.anim.describe({
+			skin: "model/molecular_transformer.png",
+			render: mtRender.getID()
+		});
+		this.anim.load();
+		delete this.liquidStorage;
+	},
+	
 	destroy: function(){
 		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
+		if(this.anim){
+			this.anim.destroy();
+			this.anim = null;
+		}
 	},
 	
 	tick: function(){
