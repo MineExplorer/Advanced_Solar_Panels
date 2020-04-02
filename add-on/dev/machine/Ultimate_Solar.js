@@ -89,7 +89,7 @@ ICore.Machine.registerGenerator(BlockID.USP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, USP.output, 4);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);

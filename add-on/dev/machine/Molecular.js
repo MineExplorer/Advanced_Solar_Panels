@@ -1,5 +1,5 @@
 IDRegistry.genBlockID("molecular_transformer");
-Block.createBlock("molecular_transformer", [{name: "", texture: []}]);
+Block.createBlock("molecular_transformer", [{name: "", texture: [["empty", 0]]}]);
 
 const mtRender = new Render();
 

@@ -155,7 +155,7 @@ ICore.Machine.registerGenerator(BlockID.ASP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, ASP.output, 4);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
@@ -265,7 +265,7 @@ ICore.Machine.registerGenerator(BlockID.HSP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, HSP.output, 1);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
@@ -374,7 +374,7 @@ ICore.Machine.registerGenerator(BlockID.USP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, USP.output, 4);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
@@ -483,7 +483,7 @@ ICore.Machine.registerGenerator(BlockID.QSP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, QSP.output, 4);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
@@ -502,17 +502,80 @@ ICore.Machine.registerGenerator(BlockID.QSP, {
 // file: machine/Molecular.js
 
 IDRegistry.genBlockID("molecular_transformer");
-Block.createBlock("molecular_transformer", [{name: "", texture: []}]);
+Block.createBlock("molecular_transformer", [{name: "", texture: [["empty", 0]]}]);
 
-(function(){
-  const mesh = new RenderMesh();
-  mesh.setBlockTexture("molecular_transformer", 0);
-  mesh.importFromFile(__dir__ + "res/molecular_transformer.obj", "obj", null);
-  const model = new BlockRenderer.Model(mesh);
-  const render = new ICRender.Model();
-  render.addEntry(model);
-  BlockRenderer.setStaticICRender(BlockID.molecular_transformer, 0, render);
-})();
+const mtRender = new Render();
+
+mtRender.setPart("body", [
+	{//coreBottom
+		type: "box",
+		uv: {x: 0, y: 0},
+		coords: {x: 0, y: 5.5, z: 0},
+		size: {x: 10, y: 3, z: 10}
+	},
+	{//coreWorkZone
+		type: "box",
+		uv: {x: 40, y: 0},
+		coords: {x: 0, y: 0.5, z: 0},
+		size: {x: 6, y: 9, z: 6}
+	},
+	{//coreTopElectr
+		type: "box",
+		uv: {x: 18, y: 29},
+		coords: {x: -0.5, y: -7, z: 0.033333},
+		size: {x: 3, y: 2, z: 3}
+	},
+	{//coreTopPlate
+		type: "box",
+		uv: {x: 0, y: 15},
+		coords: {x: -0.5, y: -5.5, z: 0},
+		size: {x: 9, y: 3, z: 9}
+	},
+	{//firstElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//firstElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {width: 64, height: 40});
+
+mtRender.getPart("body").addPart("second");
+mtRender.setPart("second", [
+	{//secondElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//secondElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {rotation: {y: -Math.PI * 2 / 3}, width: 64, height: 40});
+
+mtRender.getPart("body").addPart("third");
+mtRender.setPart("third", [
+	{//thirdElTop
+		type: "box",
+		uv: {x: 36, y: 15},
+		coords: {x: 5, y: -6.5, z: 0},
+		size: {x: 4, y: 3, z: 10}
+	},
+	{//thirdElBottom
+		type: "box",
+		uv: {x: 0, y: 29},
+		coords: {x: 5.5, y: 5.5, z: 0},
+		size: {x: 3, y: 5, z: 6}
+	}
+], {rotation: {y: Math.PI * 2 / 3}, width: 64, height: 40});
 
 IDRegistry.genItemID("molecular_transformer");
 Item.createItem("molecular_transformer", "Molecular Transformer", {name: "molecular_transformer"});
@@ -610,6 +673,8 @@ for(let i = 0; i < 16; i++){
 }
 
 ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
+	
+	anim: null,
 	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
 
 	defaultValues: {
@@ -631,8 +696,22 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 		return {input: ["slot1"], output: ["slot2"]};
 	},
 	
+	init: function(){
+		this.anim = new Animation.Base(this.x + 0.5, this.y - 1, this.z + 0.5);
+		this.anim.describe({
+			skin: "model/molecular_transformer.png",
+			render: mtRender.getID()
+		});
+		this.anim.load();
+		delete this.liquidStorage;
+	},
+	
 	destroy: function(){
 		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
+		if(this.anim){
+			this.anim.destroy();
+			this.anim = null;
+		}
 	},
 	
 	tick: function(){
@@ -808,14 +887,14 @@ Recipes.addShaped({id: ItemID.quantumCore, count: 1, data: 0}, [
 // file: items/adv_helmet.js
 
 IDRegistry.genItemID("advSolarHelmet");
-Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: false});
-ChargeItemRegistry.registerItem(ItemID.advSolarHelmet, "Eu", 1000000, 3);
+Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.advSolarHelmet, "Eu", 1000000, 2048, 3, "armor", true);
 ICore.ItemName.setRarity(ItemID.advSolarHelmet, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("advSolarHelmetUncharged");
 Item.createArmorItem("advSolarHelmetUncharged", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 2, durability: 1000000, texture: "armor/adv_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 3);
+ChargeItemRegistry.registerItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 3, "armor");
 ICore.ItemName.setRarity(ItemID.advSolarHelmetUncharged, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
@@ -883,14 +962,14 @@ Armor.registerFuncs("advSolarHelmetUncharged", NANO_ARMOR_FUNCS);
 // file: items/hybrid_helmet.js
 
 IDRegistry.genItemID("hybridSolarHelmet");
-Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: false});
-ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 4);
+Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true);
 ICore.ItemName.setRarity(ItemID.hybridSolarHelmet, 2);
 Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("hybridSolarHelmetUncharged");
 Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 4);
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor");
 ICore.ItemName.setRarity(ItemID.hybridSolarHelmetUncharged, 2);
 Item.registerNameOverrideFunction(ItemID.hybridSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
@@ -925,15 +1004,15 @@ Armor.registerFuncs("hybridSolarHelmetUncharged", QUANTUM_ARMOR_FUNCS);
 // file: items/ultimate_helmet.js
 
 IDRegistry.genItemID("ultimateSolarHelmet");
-Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: false});
-ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 4);
-ICore.ItemName.setRarity(ItemID.ultimateSolarHelmet, 2);
+Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true);
+ICore.ItemName.setRarity(ItemID.ultimateSolarHelmet, 3);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showRareItemStorage);
 
 IDRegistry.genItemID("ultimateSolarHelmetUncharged");
 Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 4);
-ICore.ItemName.setRarity(ItemID.ultimateSolarHelmetUncharged, 2);
+ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor");
+ICore.ItemName.setRarity(ItemID.ultimateSolarHelmetUncharged, 3);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
 
 Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [

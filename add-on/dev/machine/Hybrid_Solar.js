@@ -90,7 +90,7 @@ ICore.Machine.registerGenerator(BlockID.HSP, {
 		}
 		
 		for(var i = 1; i <= 4; i++){
-			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, HSP.output, 1);
+			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);

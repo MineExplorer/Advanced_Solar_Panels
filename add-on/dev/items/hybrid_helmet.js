@@ -1,12 +1,12 @@
 IDRegistry.genItemID("hybridSolarHelmet");
-Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: false});
-ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 4);
+Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true);
 ICore.ItemName.setRarity(ItemID.hybridSolarHelmet, 2);
 Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("hybridSolarHelmetUncharged");
 Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 4);
+ChargeItemRegistry.registerItem(ItemID.hybridSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor");
 ICore.ItemName.setRarity(ItemID.hybridSolarHelmetUncharged, 2);
 Item.registerNameOverrideFunction(ItemID.hybridSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
