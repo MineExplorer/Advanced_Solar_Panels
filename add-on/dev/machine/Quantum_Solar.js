@@ -2,6 +2,7 @@ IDRegistry.genBlockID("QSP");
 Block.createBlock("QSP", [
 	{name: "Quantum Solar Panel", texture: [["qsp", 2], ["qsp", 1], ["qsp", 0], ["qsp", 0], ["qsp", 0], ["qsp", 0]], inCreative: true}
 ], "opaque");
+ICore.ItemName.setRarity(BlockID.QSP, 3, true);
 
 Block.registerDropFunction("QSP", function(coords, blockID, blockData, level){
 	return ICore.Machine.getMachineDrop(coords, blockID, level);
@@ -59,6 +60,10 @@ ICore.Machine.registerGenerator(BlockID.QSP, {
 	
 	init: function(){
 		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	getTransportSlots: function(){
+		return {input: []};
 	},
 	
 	tick: function(){

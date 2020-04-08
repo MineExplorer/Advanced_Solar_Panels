@@ -1,5 +1,5 @@
-IDRegistry.genBlockID("molecular_transformer");
-Block.createBlock("molecular_transformer", [{name: "", texture: [["empty", 0]]}]);
+IDRegistry.genBlockID("molecularTransformer");
+Block.createBlock("molecularTransformer", [{name: "", texture: [["empty", 0]]}]);
 
 const mtRender = new Render();
 
@@ -74,25 +74,26 @@ mtRender.setPart("third", [
 	}
 ], {rotation: {y: Math.PI * 2 / 3}, width: 64, height: 40});
 
-IDRegistry.genItemID("molecular_transformer");
-Item.createItem("molecular_transformer", "Molecular Transformer", {name: "molecular_transformer"});
-Item.registerUseFunction("molecular_transformer", function(c, item, block){
+IDRegistry.genItemID("molecularTransformer");
+Item.createItem("molecularTransformer", "Molecular Transformer", {name: "molecular_transformer"});
+ICore.ItemName.setRarity(ItemID.molecularTransformer, 2, true);
+Item.registerUseFunction("molecularTransformer", function(c, item, block){
   c = c.relative;
   block = World.getBlockID(c.x, c.y, c.z)
   if(GenerationUtils.isTransparentBlock(block)){
-    World.setBlock(c.x, c.y, c.z, BlockID.molecular_transformer);
+    World.setBlock(c.x, c.y, c.z, BlockID.molecularTransformer);
     World.addTileEntity(c.x, c.y, c.z);
     Player.decreaseCarriedItem();
     Game.prevent();
   }
 });
 
-Block.registerDropFunction("molecular_transformer", function(){
-  return [[ItemID.molecular_transformer, 1]];
+Block.registerDropFunction("molecularTransformer", function(){
+  return [[ItemID.molecularTransformer, 1]];
 });
 
 Callback.addCallback("PreLoaded", function(){
-	Recipes.addShaped({id: ItemID.molecular_transformer, count: 1, data: 0}, [
+	Recipes.addShaped({id: ItemID.molecularTransformer, count: 1, data: 0}, [
 	 "aba",
 	 "cxc", 
 	 "aba"
@@ -126,7 +127,7 @@ Callback.addCallback("PreLoaded", function(){
 	for(var key in mt_recipes){
 		var result = mt_recipes[key];
 		var id = key;
-		if(key.split(":").length < 2){
+		if(key.indexOf(":") == -1){
 			id = eval(key);
 		}
 		if(id && result.id){
@@ -169,7 +170,7 @@ for(let i = 0; i < 16; i++){
 	}));
 }
 
-ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
+ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 	
 	anim: null,
 	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
@@ -188,11 +189,7 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 	getGuiScreen: function(){
 		return guiMT;
 	},
-	
-	getTransportSlots: function(){
-		return {input: ["slot1"], output: ["slot2"]};
-	},
-	
+
 	init: function(){
 		this.anim = new Animation.Base(this.x + 0.5, this.y - 1, this.z + 0.5);
 		this.anim.describe({
@@ -212,6 +209,8 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 	},
 	
 	tick: function(){
+		StorageInterface.checkHoppers(this);
+		
 		if(!this.data.id || !this.data.energyNeed){
 			var slot1 = this.container.getSlot("slot1");
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
@@ -219,7 +218,7 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 				this.data.id = slot1.id;
 				this.data.data = slot1.data;
 			}
-		}else{
+		} else {
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", this.data.id, this.data.data);
 		}
 		if(result){
@@ -268,5 +267,15 @@ ICore.Machine.registerElectricMachine(BlockID.molecular_transformer, {
 			return add;
 		}
 		return 0;
+	}
+});
+
+StorageInterface.createInterface(BlockID.molecularTransformer, {
+	slots: {
+		"slot1": {input: true},
+		"slot2": {output: true}
+	},
+	isValidInput: function(item){
+		return ICore.Recipe.hasRecipeFor("molecularTransformer", item.id, item.data);
 	}
 });

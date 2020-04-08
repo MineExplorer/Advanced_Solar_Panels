@@ -1,24 +1,24 @@
 IDRegistry.genItemID("ultimateSolarHelmet");
-Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true);
+Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 27, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerExtraItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true, true);
 ICore.ItemName.setRarity(ItemID.ultimateSolarHelmet, 3);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showRareItemStorage);
 
 IDRegistry.genItemID("ultimateSolarHelmetUncharged");
-Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 10000, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor");
+Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 27, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
+ChargeItemRegistry.registerExtraItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor", true);
 ICore.ItemName.setRarity(ItemID.ultimateSolarHelmetUncharged, 3);
 Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
 
 Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
 	"asa",
 	"chc"
-], ['s', BlockID.USP, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], ICore.ChargeRegistry.transportEnergy);
+], ['s', BlockID.USP, 0, 'a', ItemID.circuitAdvanced, 0, 'h', ItemID.quantumHelmet, -1, 'c', ItemID.cableOptic, 0], ICore.ChargeRegistry.transferEnergy);
 
 Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
 	"s",
 	"h"
-], ['s', BlockID.USP, 0, 'h', ItemID.hybridSolarHelmet, -1], ICore.ChargeRegistry.transportEnergy);
+], ['s', BlockID.USP, 0, 'h', ItemID.hybridSolarHelmet, -1], ICore.ChargeRegistry.transferEnergy);
 
 
 ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.ultimateSolarHelmet, {charged: ItemID.ultimateSolarHelmet, uncharged: ItemID.ultimateSolarHelmetUncharged});

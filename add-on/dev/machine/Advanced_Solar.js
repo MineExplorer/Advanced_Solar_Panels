@@ -2,6 +2,7 @@ IDRegistry.genBlockID("ASP");
 Block.createBlock("ASP", [
 	{name: "Advanced Solar Panel", texture: [["asp", 2], ["asp", 1], ["asp", 0], ["asp", 0], ["asp", 0], ["asp", 0]], inCreative: true}
 ], "opaque");
+ICore.ItemName.setRarity(BlockID.ASP, 1, true);
 
 Block.registerDropFunction("ASP", function(coords, blockID, blockData, level){
 	return ICore.Machine.getMachineDrop(coords, blockID, level);
@@ -60,6 +61,10 @@ ICore.Machine.registerGenerator(BlockID.ASP, {
 	
 	init: function(){
 		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
+	},
+	
+	getTransportSlots: function(){
+		return {input: []};
 	},
 	
 	tick: function(){

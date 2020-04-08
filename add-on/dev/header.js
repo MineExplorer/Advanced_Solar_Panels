@@ -13,3 +13,4 @@
 
 var GUI_SCALE = 3.2;
 IMPORT("ChargeItem");
+IMPORT("StorageInterface");
