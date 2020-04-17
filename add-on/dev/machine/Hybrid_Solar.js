@@ -1,7 +1,7 @@
 IDRegistry.genBlockID("HSP");
 Block.createBlock("HSP", [
 	{name: "Hybrid Solar Panel", texture: [["hsp", 2], ["hsp", 1], ["hsp", 0], ["hsp", 0], ["hsp", 0], ["hsp", 0]], inCreative: true}
-], "opaque");
+], "machine");
 ICore.ItemName.setRarity(BlockID.HSP, 2, true);
 
 Block.registerDropFunction("HSP", function(coords, blockID, blockData, level){

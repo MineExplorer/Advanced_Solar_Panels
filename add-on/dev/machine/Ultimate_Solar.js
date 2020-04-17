@@ -1,7 +1,7 @@
 IDRegistry.genBlockID("USP");
 Block.createBlock("USP", [
 	{name: "Ultimate Solar Panel", texture: [["usp", 2], ["usp", 1], ["usp", 0], ["usp", 0], ["usp", 0], ["usp", 0]], inCreative: true}
-], "opaque");
+], "machine");
 ICore.ItemName.setRarity(BlockID.USP, 3, true);
 
 Block.registerDropFunction("USP", function(coords, blockID, blockData, level){

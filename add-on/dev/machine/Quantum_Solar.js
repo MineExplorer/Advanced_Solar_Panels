@@ -1,7 +1,7 @@
 IDRegistry.genBlockID("QSP");
 Block.createBlock("QSP", [
 	{name: "Quantum Solar Panel", texture: [["qsp", 2], ["qsp", 1], ["qsp", 0], ["qsp", 0], ["qsp", 0], ["qsp", 0]], inCreative: true}
-], "opaque");
+], "machine");
 ICore.ItemName.setRarity(BlockID.QSP, 3, true);
 
 Block.registerDropFunction("QSP", function(coords, blockID, blockData, level){

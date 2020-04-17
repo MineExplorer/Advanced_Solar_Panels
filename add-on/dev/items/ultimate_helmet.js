@@ -2,13 +2,13 @@ IDRegistry.genItemID("ultimateSolarHelmet");
 Item.createArmorItem("ultimateSolarHelmet", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 5, durability: 27, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerExtraItem(ItemID.ultimateSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true, true);
 ICore.ItemName.setRarity(ItemID.ultimateSolarHelmet, 3);
-Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showRareItemStorage);
+Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("ultimateSolarHelmetUncharged");
 Item.createArmorItem("ultimateSolarHelmetUncharged", "Ultimate Solar Helmet", {name: "ultimate_solar_helmet"}, {type: "helmet", armor: 2, durability: 27, texture: "armor/ultimate_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerExtraItem(ItemID.ultimateSolarHelmetUncharged, "Eu", 10000000, 8192, 4, "armor", true);
 ICore.ItemName.setRarity(ItemID.ultimateSolarHelmetUncharged, 3);
-Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showRareItemStorage);
+Item.registerNameOverrideFunction(ItemID.ultimateSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
 Recipes.addShaped({id: ItemID.ultimateSolarHelmet, count: 1, data: Item.getMaxDamage(ItemID.ultimateSolarHelmet)}, [
 	"asa",

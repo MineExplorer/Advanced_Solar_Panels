@@ -3,7 +3,7 @@ Block.createBlock("molecularTransformer", [{name: "", texture: [["empty", 0]]}])
 
 const mtRender = new Render();
 
-mtRender.setPart("body", [
+mtRender.setPart("head", [
 	{//coreBottom
 		type: "box",
 		uv: {x: 0, y: 0},
@@ -42,7 +42,7 @@ mtRender.setPart("body", [
 	}
 ], {width: 64, height: 40});
 
-mtRender.getPart("body").addPart("second");
+mtRender.getPart("head").addPart("second");
 mtRender.setPart("second", [
 	{//secondElTop
 		type: "box",
@@ -58,7 +58,7 @@ mtRender.setPart("second", [
 	}
 ], {rotation: {y: -Math.PI * 2 / 3}, width: 64, height: 40});
 
-mtRender.getPart("body").addPart("third");
+mtRender.getPart("head").addPart("third");
 mtRender.setPart("third", [
 	{//thirdElTop
 		type: "box",

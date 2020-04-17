@@ -1,7 +1,7 @@
 IDRegistry.genBlockID("ASP");
 Block.createBlock("ASP", [
 	{name: "Advanced Solar Panel", texture: [["asp", 2], ["asp", 1], ["asp", 0], ["asp", 0], ["asp", 0], ["asp", 0]], inCreative: true}
-], "opaque");
+], "machine");
 ICore.ItemName.setRarity(BlockID.ASP, 1, true);
 
 Block.registerDropFunction("ASP", function(coords, blockID, blockData, level){
