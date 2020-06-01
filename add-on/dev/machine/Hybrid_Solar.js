@@ -3,16 +3,13 @@ Block.createBlock("HSP", [
 	{name: "Hybrid Solar Panel", texture: [["hsp", 2], ["hsp", 1], ["hsp", 0], ["hsp", 0], ["hsp", 0], ["hsp", 0]], inCreative: true}
 ], "machine");
 ICore.ItemName.setRarity(BlockID.HSP, 2, true);
-
-Block.registerDropFunction("HSP", function(coords, blockID, blockData, level){
-	return ICore.Machine.getMachineDrop(coords, blockID, level);
-});
+ICore.Machine.setMachineDrop("HSP");
 
 var HSP = {
-	gen_day: parseInt(__config__.access("hybrid_solar_panel.gen_day")),
-	gen_night: parseInt(__config__.access("hybrid_solar_panel.gen_night")),
-	output: parseInt(__config__.access("hybrid_solar_panel.output")),
-	energy_storage: parseInt(__config__.access("hybrid_solar_panel.storage"))
+	gen_day: __config__.getNumber("hybrid_solar_panel.gen_day"),
+	gen_night: __config__.getNumber("hybrid_solar_panel.gen_night"),
+	output: __config__.getNumber("hybrid_solar_panel.output"),
+	energy_storage: __config__.getNumber("hybrid_solar_panel.storage")
 }
 
 var guiHSP = new UI.StandartWindow({
@@ -99,7 +96,7 @@ ICore.Machine.registerGenerator(BlockID.HSP, {
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+		this.container.setText("textInfo1", this.data.energy + "/" + energyStorage);
 	},
 	
 	energyTick: function(type, src){

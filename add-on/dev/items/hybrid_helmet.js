@@ -3,6 +3,7 @@ Item.createArmorItem("hybridSolarHelmet", "Hybrid Solar Helmet", {name: "hybrid_
 ChargeItemRegistry.registerExtraItem(ItemID.hybridSolarHelmet, "Eu", 10000000, 8192, 4, "armor", true, true);
 ICore.ItemName.setRarity(ItemID.hybridSolarHelmet, 2);
 Item.registerNameOverrideFunction(ItemID.hybridSolarHelmet, ICore.ItemName.showItemStorage);
+ICore.Integration.registerQuantumArmorItem(ItemID.hybridSolarHelmet);
 
 IDRegistry.genItemID("hybridSolarHelmetUncharged");
 Item.createArmorItem("hybridSolarHelmetUncharged", "Hybrid Solar Helmet", {name: "hybrid_solar_helmet"}, {type: "helmet", armor: 2, durability: 27, texture: "armor/hybrid_solar_helmet_1.png", isTech: true});
@@ -20,8 +21,6 @@ ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.hybridSolarHelmet, {cha
 ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.hybridSolarHelmetUncharged, {charged: ItemID.hybridSolarHelmet, uncharged: ItemID.hybridSolarHelmetUncharged});
 
 ICore.UI.setArmorButton(ItemID.hybridSolarHelmet, "button_nightvision");
-
-var QUANTUM_ARMOR_FUNCS = ICore.requireGlobal("QUANTUM_ARMOR_FUNCS");
 
 Callback.addCallback("tick", function(){
 	if(World.getThreadTime()%20 == 0){

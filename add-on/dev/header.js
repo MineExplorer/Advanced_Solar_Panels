@@ -11,6 +11,8 @@
  This code is a copyright, do not distribute.
 */
 
-var GUI_SCALE = 3.2;
 IMPORT("ChargeItem");
 IMPORT("StorageInterface");
+
+var GUI_SCALE = 3.2;
+var QUANTUM_ARMOR_FUNCS = ICore.requireGlobal("QUANTUM_ARMOR_FUNCS");

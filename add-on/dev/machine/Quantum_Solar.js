@@ -3,16 +3,13 @@ Block.createBlock("QSP", [
 	{name: "Quantum Solar Panel", texture: [["qsp", 2], ["qsp", 1], ["qsp", 0], ["qsp", 0], ["qsp", 0], ["qsp", 0]], inCreative: true}
 ], "machine");
 ICore.ItemName.setRarity(BlockID.QSP, 3, true);
-
-Block.registerDropFunction("QSP", function(coords, blockID, blockData, level){
-	return ICore.Machine.getMachineDrop(coords, blockID, level);
-});
+ICore.Machine.setMachineDrop("QSP");
 
 var QSP = {
-	gen_day: parseInt(__config__.access("quantum_solar_panel.gen_day")),
-	gen_night: parseInt(__config__.access("quantum_solar_panel.gen_night")),
-	output: parseInt(__config__.access("quantum_solar_panel.output")),
-	energy_storage: parseInt(__config__.access("quantum_solar_panel.storage"))
+	gen_day: __config__.getNumber("quantum_solar_panel.gen_day"),
+	gen_night: __config__.getNumber("quantum_solar_panel.gen_night"),
+	output: __config__.getNumber("quantum_solar_panel.output"),
+	energy_storage: __config__.getNumber("quantum_solar_panel.storage")
 }
 
 var guiQSP = new UI.StandartWindow({
@@ -98,7 +95,7 @@ ICore.Machine.registerGenerator(BlockID.QSP, {
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+		this.container.setText("textInfo1", this.data.energy + "/" + energyStorage);
 	},
 	
 	energyTick: function(type, src){

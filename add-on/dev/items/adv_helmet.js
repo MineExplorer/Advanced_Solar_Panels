@@ -1,12 +1,12 @@
 IDRegistry.genItemID("advSolarHelmet");
-Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 4, durability: 27, texture: "armor/adv_solar_helmet_1.png", isTech: true});
+Item.createArmorItem("advSolarHelmet", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 5, durability: 27, texture: "armor/adv_solar_helmet_1.png", isTech: true});
 ChargeItemRegistry.registerExtraItem(ItemID.advSolarHelmet, "Eu", 1000000, 2048, 3, "armor", true, true);
 ICore.ItemName.setRarity(ItemID.advSolarHelmet, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmet, ICore.ItemName.showItemStorage);
 
 IDRegistry.genItemID("advSolarHelmetUncharged");
 Item.createArmorItem("advSolarHelmetUncharged", "Advanced Solar Helmet", {name: "adv_solar_helmet"}, {type: "helmet", armor: 2, durability: 27, texture: "armor/adv_solar_helmet_1.png", isTech: true});
-ChargeItemRegistry.registerExtraItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 3, "armor", true);
+ChargeItemRegistry.registerExtraItem(ItemID.advSolarHelmetUncharged, "Eu", 1000000, 2048, 3, "armor", true);
 ICore.ItemName.setRarity(ItemID.advSolarHelmetUncharged, 1);
 Item.registerNameOverrideFunction(ItemID.advSolarHelmetUncharged, ICore.ItemName.showItemStorage);
 
@@ -33,7 +33,7 @@ function chargeArmor(genD, genN){
 	if(GenerationUtils.canSeeSky(p.x, p.y, p.z)){
 		if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
 			var energy = genD;
-		}else{
+		} else {
 			var energy = genN;
 		}
 		for(var i = 3; i >= 0; i--){

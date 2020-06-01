@@ -3,16 +3,13 @@ Block.createBlock("USP", [
 	{name: "Ultimate Solar Panel", texture: [["usp", 2], ["usp", 1], ["usp", 0], ["usp", 0], ["usp", 0], ["usp", 0]], inCreative: true}
 ], "machine");
 ICore.ItemName.setRarity(BlockID.USP, 3, true);
-
-Block.registerDropFunction("USP", function(coords, blockID, blockData, level){
-	return ICore.Machine.getMachineDrop(coords, blockID, level);
-});
+ICore.Machine.setMachineDrop("USP");
 
 var USP = {
-	gen_day: parseInt(__config__.access("ultimate_solar_panel.gen_day")),
-	gen_night: parseInt(__config__.access("ultimate_solar_panel.gen_night")),
-	output: parseInt(__config__.access("ultimate_solar_panel.output")),
-	energy_storage: parseInt(__config__.access("ultimate_solar_panel.storage"))
+	gen_day: __config__.getNumber("ultimate_solar_panel.gen_day"),
+	gen_night: __config__.getNumber("ultimate_solar_panel.gen_night"),
+	output: __config__.getNumber("ultimate_solar_panel.output"),
+	energy_storage: __config__.getNumber("ultimate_solar_panel.storage")
 }
 
 var guiUSP = new UI.StandartWindow({
@@ -98,7 +95,7 @@ ICore.Machine.registerGenerator(BlockID.USP, {
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+		this.container.setText("textInfo1", this.data.energy + "/" + energyStorage);
 	},
 	
 	energyTick: function(type, src){

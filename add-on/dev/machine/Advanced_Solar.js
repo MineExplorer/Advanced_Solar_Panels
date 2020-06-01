@@ -3,17 +3,13 @@ Block.createBlock("ASP", [
 	{name: "Advanced Solar Panel", texture: [["asp", 2], ["asp", 1], ["asp", 0], ["asp", 0], ["asp", 0], ["asp", 0]], inCreative: true}
 ], "machine");
 ICore.ItemName.setRarity(BlockID.ASP, 1, true);
-
-Block.registerDropFunction("ASP", function(coords, blockID, blockData, level){
-	return ICore.Machine.getMachineDrop(coords, blockID, level);
-});
-
+ICore.Machine.setMachineDrop("ASP");
 
 var ASP = {
-	gen_day: parseInt(__config__.access("advanced_solar_panel.gen_day")),
-	gen_night: parseInt(__config__.access("advanced_solar_panel.gen_night")),
-	output: parseInt(__config__.access("advanced_solar_panel.output")),
-	energy_storage: parseInt(__config__.access("advanced_solar_panel.storage"))
+	gen_day: __config__.getNumber("advanced_solar_panel.gen_day"),
+	gen_night: __config__.getNumber("advanced_solar_panel.gen_night"),
+	output: __config__.getNumber("advanced_solar_panel.output"),
+	energy_storage: __config__.getNumber("advanced_solar_panel.storage")
 }
 
 var guiASP = new UI.StandartWindow({
@@ -99,7 +95,7 @@ ICore.Machine.registerGenerator(BlockID.ASP, {
 		}
 		
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", parseInt(this.data.energy) + "/" + energyStorage);
+		this.container.setText("textInfo1", this.data.energy + "/" + energyStorage);
 	},
 	
 	energyTick: function(type, src){
