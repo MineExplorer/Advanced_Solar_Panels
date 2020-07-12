@@ -1,99 +1,21 @@
 IDRegistry.genBlockID("molecularTransformer");
-Block.createBlock("molecularTransformer", [{name: "", texture: [["empty", 0]]}]);
+Block.createBlock("molecularTransformer", [
+	{name: "Molecular Transformer", texture: [["molecular_transformer", 0]], inCreative: true}
+]);
+ICore.ItemName.setRarity(BlockID.molecularTransformer, 2, true);
 
-const mtRender = new Render();
-
-mtRender.setPart("head", [
-	{//coreBottom
-		type: "box",
-		uv: {x: 0, y: 0},
-		coords: {x: 0, y: 5.5, z: 0},
-		size: {x: 10, y: 3, z: 10}
-	},
-	{//coreWorkZone
-		type: "box",
-		uv: {x: 40, y: 0},
-		coords: {x: 0, y: 0.5, z: 0},
-		size: {x: 6, y: 9, z: 6}
-	},
-	{//coreTopElectr
-		type: "box",
-		uv: {x: 18, y: 29},
-		coords: {x: -0.5, y: -7, z: 0.033333},
-		size: {x: 3, y: 2, z: 3}
-	},
-	{//coreTopPlate
-		type: "box",
-		uv: {x: 0, y: 15},
-		coords: {x: -0.5, y: -5.5, z: 0},
-		size: {x: 9, y: 3, z: 9}
-	},
-	{//firstElTop
-		type: "box",
-		uv: {x: 36, y: 15},
-		coords: {x: 5, y: -6.5, z: 0},
-		size: {x: 4, y: 3, z: 10}
-	},
-	{//firstElBottom
-		type: "box",
-		uv: {x: 0, y: 29},
-		coords: {x: 5.5, y: 5.5, z: 0},
-		size: {x: 3, y: 5, z: 6}
-	}
-], {width: 64, height: 40});
-
-mtRender.getPart("head").addPart("second");
-mtRender.setPart("second", [
-	{//secondElTop
-		type: "box",
-		uv: {x: 36, y: 15},
-		coords: {x: 5, y: -6.5, z: 0},
-		size: {x: 4, y: 3, z: 10}
-	},
-	{//secondElBottom
-		type: "box",
-		uv: {x: 0, y: 29},
-		coords: {x: 5.5, y: 5.5, z: 0},
-		size: {x: 3, y: 5, z: 6}
-	}
-], {rotation: {y: -Math.PI * 2 / 3}, width: 64, height: 40});
-
-mtRender.getPart("head").addPart("third");
-mtRender.setPart("third", [
-	{//thirdElTop
-		type: "box",
-		uv: {x: 36, y: 15},
-		coords: {x: 5, y: -6.5, z: 0},
-		size: {x: 4, y: 3, z: 10}
-	},
-	{//thirdElBottom
-		type: "box",
-		uv: {x: 0, y: 29},
-		coords: {x: 5.5, y: 5.5, z: 0},
-		size: {x: 3, y: 5, z: 6}
-	}
-], {rotation: {y: Math.PI * 2 / 3}, width: 64, height: 40});
-
-IDRegistry.genItemID("molecularTransformer");
-Item.createItem("molecularTransformer", "Molecular Transformer", {name: "molecular_transformer"});
-ICore.ItemName.setRarity(ItemID.molecularTransformer, 2, true);
-Item.registerUseFunction("molecularTransformer", function(c, item, block) {
-  c = c.relative;
-  block = World.getBlockID(c.x, c.y, c.z)
-  if (GenerationUtils.isTransparentBlock(block)) {
-    World.setBlock(c.x, c.y, c.z, BlockID.molecularTransformer);
-    World.addTileEntity(c.x, c.y, c.z);
-    Player.decreaseCarriedItem();
-    Game.prevent();
-  }
-});
-
-Block.registerDropFunction("molecularTransformer", function() {
-  return [[ItemID.molecularTransformer, 1]];
-});
+(function(){
+  const mesh = new RenderMesh();
+  mesh.setBlockTexture("molecular_transformer_model", 0);
+  mesh.importFromFile(__dir__ + "res/molecular_transformer.obj", "obj", null);
+  const model = new BlockRenderer.Model(mesh);
+  const render = new ICRender.Model();
+  render.addEntry(model);
+  BlockRenderer.setStaticICRender(BlockID.molecularTransformer, 0, render);
+})();
 
 Callback.addCallback("PreLoaded", function() {
-	Recipes.addShaped({id: ItemID.molecularTransformer, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.molecularTransformer, count: 1, data: 0}, [
 	 "aba",
 	 "cxc", 
 	 "aba"
@@ -171,8 +93,6 @@ for(let i = 0; i < 16; i++) {
 }
 
 ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
-	
-	anim: null,
 	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
 
 	defaultValues: {
@@ -189,23 +109,13 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 	getGuiScreen: function() {
 		return guiMT;
 	},
-
-	init: function() {
-		this.anim = new Animation.Base(this.x + 0.5, this.y - 1, this.z + 0.5);
-		this.anim.describe({
-			skin: "model/molecular_transformer.png",
-			render: mtRender.getID()
-		});
-		this.anim.load();
-		delete this.liquidStorage;
+	
+	getTransportSlots: function(){
+		return {input: ["slot1"], output: ["slot2"]};
 	},
 	
-	destroy: function() {
-		if (this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
-		if (this.anim) {
-			this.anim.destroy();
-			this.anim = null;
-		}
+	destroy: function(){
+		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
 	},
 	
 	tick: function() {
