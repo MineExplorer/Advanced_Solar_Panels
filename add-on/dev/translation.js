@@ -25,3 +25,8 @@ Translation.addTranslation("Quantum Core", {ru: "Квантовое ядро", z
 Translation.addTranslation("Advanced Solar Helmet", {ru: "Улучшенный солнечный шлем", zh: "高级太阳能头盔"});
 Translation.addTranslation("Hybrid Solar Helmet", {ru: "Гибридный солнечный шлем", zh: "混合太阳能头盔"});
 Translation.addTranslation("Ultimate Solar Helmet", {ru: "Совершенный солнечный шлем", zh: "终极混合太阳能头盔"});
+
+// GUI
+Translation.addTranslation("Storage: ", {ru: "Хранилище: "});
+Translation.addTranslation("Max Output: ", {ru: "Макс. выход: "});
+Translation.addTranslation("Generating: ", {ru: "Генерация: "});

@@ -77,10 +77,10 @@ mtRender.setPart("third", [
 IDRegistry.genItemID("molecularTransformer");
 Item.createItem("molecularTransformer", "Molecular Transformer", {name: "molecular_transformer"});
 ICore.ItemName.setRarity(ItemID.molecularTransformer, 2, true);
-Item.registerUseFunction("molecularTransformer", function(c, item, block){
+Item.registerUseFunction("molecularTransformer", function(c, item, block) {
   c = c.relative;
   block = World.getBlockID(c.x, c.y, c.z)
-  if(GenerationUtils.isTransparentBlock(block)){
+  if (GenerationUtils.isTransparentBlock(block)) {
     World.setBlock(c.x, c.y, c.z, BlockID.molecularTransformer);
     World.addTileEntity(c.x, c.y, c.z);
     Player.decreaseCarriedItem();
@@ -88,11 +88,11 @@ Item.registerUseFunction("molecularTransformer", function(c, item, block){
   }
 });
 
-Block.registerDropFunction("molecularTransformer", function(){
+Block.registerDropFunction("molecularTransformer", function() {
   return [[ItemID.molecularTransformer, 1]];
 });
 
-Callback.addCallback("PreLoaded", function(){
+Callback.addCallback("PreLoaded", function() {
 	Recipes.addShaped({id: ItemID.molecularTransformer, count: 1, data: 0}, [
 	 "aba",
 	 "cxc", 
@@ -124,13 +124,13 @@ Callback.addCallback("PreLoaded", function(){
 		266: {id: ItemID.ingotPlatinum, count: 1, data: 0, energy: 9e6},
 		// nether quartz -> certus quartz 5e5
 	}
-	for(var key in mt_recipes){
+	for(var key in mt_recipes) {
 		var result = mt_recipes[key];
 		var id = key;
-		if(key.indexOf(":") == -1){
+		if (key.indexOf(":") == -1) {
 			id = eval(key);
 		}
-		if(id && result.id){
+		if (id && result.id) {
 			ICore.Recipe.addRecipeFor("molecularTransformer", id, result);
 		}
 	}
@@ -138,7 +138,7 @@ Callback.addCallback("PreLoaded", function(){
 
 var guiMT = new UI.StandartWindow({
 	standart: {
-		header: {text: {text: "Molecular Transformer"}},
+		header: {text: {text: Translation.translate("Molecular Transformer")}},
 		inventory: {standart: true},
 		background: {color: android.graphics.Color.parseColor("#8cc8fa")}
 	},
@@ -152,7 +152,7 @@ var guiMT = new UI.StandartWindow({
 	elements: {
 		"progressScale": {type: "scale", x: 390, y: 181, direction: 3, bitmap: "molecular_bar", scale: GUI_SCALE},
 		"slot1": {type: "slot", x: 374, y: 108, size: 64},
-		"slot2": {type: "slot", x: 374, y: 239, size: 64, isValid: function(){return false}},
+		"slot2": {type: "slot", x: 374, y: 239, size: 64, isValid: function() {return false}},
 		"textInput": {type: "text", x: 520, y: 130},
 		"textOutput": {type: "text", x: 520, y: 170},
 		"textEnergy": {type: "text", x: 520, y: 210},
@@ -161,7 +161,7 @@ var guiMT = new UI.StandartWindow({
 });
 
 var MTParticles = [];
-for(let i = 0; i < 16; i++){
+for(let i = 0; i < 16; i++) {
 	MTParticles.push(Particles.registerParticleType({
 		texture: "mt_work_" + i,
 		size: [2, 2],
@@ -182,15 +182,15 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 		energyNeed: 0
 	},
 	
-	getTier: function(){
+	getTier: function() {
 		return 14;
 	},
 
-	getGuiScreen: function(){
+	getGuiScreen: function() {
 		return guiMT;
 	},
 
-	init: function(){
+	init: function() {
 		this.anim = new Animation.Base(this.x + 0.5, this.y - 1, this.z + 0.5);
 		this.anim.describe({
 			skin: "model/molecular_transformer.png",
@@ -200,39 +200,39 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 		delete this.liquidStorage;
 	},
 	
-	destroy: function(){
-		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
-		if(this.anim){
+	destroy: function() {
+		if (this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
+		if (this.anim) {
 			this.anim.destroy();
 			this.anim = null;
 		}
 	},
 	
-	tick: function(){
+	tick: function() {
 		StorageInterface.checkHoppers(this);
 		
-		if(!this.data.id || !this.data.energyNeed){
+		if (!this.data.id || !this.data.energyNeed) {
 			var slot1 = this.container.getSlot("slot1");
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
-			if(result){
+			if (result) {
 				this.data.id = slot1.id;
 				this.data.data = slot1.data;
 			}
 		} else {
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", this.data.id, this.data.data);
 		}
-		if(result){
+		if (result) {
 			this.container.setText("textInput", "Input: " + Item.getName(this.data.id, this.data.data));
 			var itemName = Item.getName(result.id, result.data);
-			if(itemName[0] == '§') itemName = itemName.slice(2);
+			if (itemName[0] == '§') itemName = itemName.slice(2);
 			this.container.setText("textOutput", "Output: " + itemName);
 			this.container.setText("textEnergy", "Energy: " + result.energy);
 			this.container.setText("textProgress", "Progress: " + parseInt(this.data.progress / result.energy * 100) + "%");
 			this.container.setScale("progressScale", this.data.progress / result.energy);
-			if(this.data.last_energy_receive > 0){
+			if (this.data.last_energy_receive > 0) {
 				this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, this.x + 0.5, this.y + 0.5, this.z + 0.5);
 				var slot2 = this.container.getSlot("slot2");
-				if(this.data.progress >= result.energy && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))){
+				if (this.data.progress >= result.energy && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
 					this.data.id = this.data.data = 0;
 					slot2.id = result.id;
 					slot2.data = result.data;
@@ -242,7 +242,7 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 				}
 			}
 		}
-		else{
+		else {
 			this.container.setScale("progressScale", 0);
 			this.container.setText("textInput", "Input:    ");
 			this.container.setText("textOutput", "Output:   ");
@@ -252,8 +252,8 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 	},
 	
 	energyReceive: function(type, amount, voltage) {
-		if(this.data.id){
-			if(!this.data.energyNeed){
+		if (this.data.id) {
+			if (!this.data.energyNeed) {
 				var slot1 = this.container.getSlot("slot1");
 				var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
 				this.data.energyNeed = result.energy;
@@ -275,7 +275,7 @@ StorageInterface.createInterface(BlockID.molecularTransformer, {
 		"slot1": {input: true},
 		"slot2": {output: true}
 	},
-	isValidInput: function(item){
+	isValidInput: function(item) {
 		return ICore.Recipe.hasRecipeFor("molecularTransformer", item.id, item.data);
 	}
 });

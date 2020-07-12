@@ -27,10 +27,10 @@ ICore.Recipe.addRecipeFor("quantum-armor-charge", ItemID.ultimateSolarHelmetUnch
 
 ICore.UI.setArmorButton(ItemID.ultimateSolarHelmet, "button_nightvision");
 
-Callback.addCallback("tick", function(){
-	if(World.getThreadTime()%20 == 0){
+Callback.addCallback("tick", function() {
+	if (World.getThreadTime()%20 == 0) {
 		var slot = Player.getArmorSlot(0);
-		if(slot.id == ItemID.ultimateSolarHelmet || slot.id == ItemID.ultimateSolarHelmetUncharged){
+		if (slot.id == ItemID.ultimateSolarHelmet || slot.id == ItemID.ultimateSolarHelmetUncharged) {
 			chargeArmor(USP.gen_day*20, USP.gen_night*20);
 		}
 	}

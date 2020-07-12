@@ -6,15 +6,15 @@ ICore.ItemName.setRarity(BlockID.HSP, 2, true);
 ICore.Machine.setMachineDrop("HSP");
 
 var HSP = {
-	gen_day: __config__.getNumber("hybrid_solar_panel.gen_day"),
-	gen_night: __config__.getNumber("hybrid_solar_panel.gen_night"),
-	output: __config__.getNumber("hybrid_solar_panel.output"),
-	energy_storage: __config__.getNumber("hybrid_solar_panel.storage")
+	gen_day: parseInt(__config__.access("hybrid_solar_panel.gen_day")),
+	gen_night: parseInt(__config__.access("hybrid_solar_panel.gen_night")),
+	output: parseInt(__config__.access("hybrid_solar_panel.output")),
+	energy_storage: parseInt(__config__.access("hybrid_solar_panel.storage"))
 }
 
 var guiHSP = new UI.StandartWindow({
 	standart: {
-		header: {text: {text: "Hybrid Solar Panel"}},
+		header: {text: {text: Translation.translate("Hybrid Solar Panel")}},
 		inventory: {standart: true},
 		background: {standart: true}
 	},
@@ -33,14 +33,12 @@ var guiHSP = new UI.StandartWindow({
 		"slot2": {type: "slot", x: 459, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
 		"slot3": {type: "slot", x: 518, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
 		"slot4": {type: "slot", x: 577, y: 235, isValid: function(id){return ChargeItemRegistry.isValidItem(id, "Eu", 4)}},
-		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: "Storage:"},
-		"textInfo1": {type: "text", x: 628, y: 105, width: 300, height: 50, text: "/100000"},
-		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: "Max Output: " + HSP.output + " EU/t"},
-		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: "Generating:"},
+		"textStorage": {type: "text", x: 515, y: 105, width: 300, height: 50, text: Translation.translate("Storage: ")},
+		"textOutput": {type: "text", x: 515, y: 145, width: 300, height: 20, text: Translation.translate("Max Output: ") + HSP.output + " EU/t"},
+		"textGen": {type: "text", x: 515, y: 185, width: 300, height: 39, text: Translation.translate("Generating: ")},
 		"light": {type: "image", x: 426, y: 175, bitmap: "asp_dark", scale: GUI_SCALE}
 	}
 });
-
 
 
 ICore.Machine.registerGenerator(BlockID.HSP, {
@@ -48,58 +46,58 @@ ICore.Machine.registerGenerator(BlockID.HSP, {
 		canSeeSky: false
 	},
 	
-	getEnergyStorage: function(){
+	getEnergyStorage: function() {
 		return HSP.energy_storage;
 	},
 	
-	getGuiScreen: function(){
+	getGuiScreen: function() {
 		return guiHSP;
 	},
 	
-	init: function(){
+	init: function() {
 		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
 	},
 	
-	getTransportSlots: function(){
+	getTransportSlots: function() {
 		return {input: []};
 	},
 	
-	tick: function(){
+	tick: function() {
 		var energyStorage = this.getEnergyStorage();
 		var content = this.container.getGuiContent();
-		if(World.getThreadTime()%100 == 0){
+		var generating = 0;
+
+		if (World.getThreadTime() % 100 == 0) {
 			this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
 		}
-		if(this.data.canSeeSky){
-			var time = World.getWorldTime()%24000;
-			if((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y+1, this.z) > 14)){
-				this.data.energy = Math.min(this.data.energy + HSP.gen_day, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + HSP.gen_day + " EU/t"); 
-				if(content){ 
-				content.elements["light"].bitmap = "asp_sun";}
+		if (this.data.canSeeSky) {
+			var time = World.getWorldTime() % 24000;
+			if ((time >= 23500 || time < 12550) && (!World.getWeather().rain || World.getLightLevel(this.x, this.y + 1, this.z) > 14)) {
+				generating = HSP.gen_day;
+				if (content)
+					content.elements["light"].bitmap = "asp_sun";
 			}
-			else{
-				this.data.energy = Math.min(this.data.energy + HSP.gen_night, this.getEnergyStorage());
-				this.container.setText("textGen", "Generating: " + HSP.gen_night + " EU/t");
-				if(content){
-				content.elements["light"].bitmap = "asp_moon";}
+			else {
+				generating = HSP.gen_night;
+				if (content)
+					content.elements["light"].bitmap = "asp_moon";
 			}
+			this.data.energy = Math.min(this.data.energy + generating, this.getEnergyStorage());
 		}
-		else{
-			this.container.setText("textGen", "Generating: 0 EU/t");
-			if(content){
-			content.elements["light"].bitmap = "asp_dark";}
+		else if (content) {
+			content.elements["light"].bitmap = "asp_dark";
 		}
 		
-		for(var i = 1; i <= 4; i++){
+		for(var i = 1; i <= 4; i++) {
 			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
 		
+		this.container.setText("textGen", Translation.translate("Generating: ") + generating + " EU/t");
+		this.container.setText("textStorage", Translation.translate("Storage: ") + this.data.energy + "/" + energyStorage);
 		this.container.setScale("energyScale", this.data.energy / energyStorage);
-		this.container.setText("textInfo1", this.data.energy + "/" + energyStorage);
 	},
 	
-	energyTick: function(type, src){
+	energyTick: function(type, src) {
 		var output = Math.min(HSP.output, this.data.energy);
 		this.data.energy += src.add(output) - output;
 	}
