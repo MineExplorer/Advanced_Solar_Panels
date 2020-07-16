@@ -26,7 +26,14 @@ Translation.addTranslation("Advanced Solar Helmet", {ru: "Улучшенный �
 Translation.addTranslation("Hybrid Solar Helmet", {ru: "Гибридный солнечный шлем", zh: "混合太阳能头盔"});
 Translation.addTranslation("Ultimate Solar Helmet", {ru: "Совершенный солнечный шлем", zh: "终极混合太阳能头盔"});
 
-// GUI
+/* GUI */
+// ASP
 Translation.addTranslation("Storage: ", {ru: "Хранилище: "});
-Translation.addTranslation("Max Output: ", {ru: "Макс. выход: "});
+Translation.addTranslation("Max Output: ", {ru: "Макс выход: "});
 Translation.addTranslation("Generating: ", {ru: "Генерация: "});
+
+// Molecular Transformer
+Translation.addTranslation("Input: ", {ru: "Вход: "});
+Translation.addTranslation("Output: ", {ru: "Выход: "});
+Translation.addTranslation("Energy: ", {ru: "Энергия: "});
+Translation.addTranslation("Progress: ", {ru: "Прогресс: "});

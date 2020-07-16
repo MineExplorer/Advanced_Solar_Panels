@@ -12,6 +12,7 @@ ICore.ItemName.setRarity(BlockID.molecularTransformer, 2, true);
   const render = new ICRender.Model();
   render.addEntry(model);
   BlockRenderer.setStaticICRender(BlockID.molecularTransformer, 0, render);
+  ItemModel.getFor(BlockID.molecularTransformer, 0).setModUiSpritePath("terrain-atlas/molecular_transformer.png")
 })();
 
 Callback.addCallback("PreLoaded", function() {
@@ -46,7 +47,7 @@ Callback.addCallback("PreLoaded", function() {
 		266: {id: ItemID.ingotPlatinum, count: 1, data: 0, energy: 9e6},
 		// nether quartz -> certus quartz 5e5
 	}
-	for(var key in mt_recipes) {
+	for (var key in mt_recipes) {
 		var result = mt_recipes[key];
 		var id = key;
 		if (key.indexOf(":") == -1) {
@@ -74,7 +75,7 @@ var guiMT = new UI.StandartWindow({
 	elements: {
 		"progressScale": {type: "scale", x: 390, y: 181, direction: 3, bitmap: "molecular_bar", scale: GUI_SCALE},
 		"slot1": {type: "slot", x: 374, y: 108, size: 64},
-		"slot2": {type: "slot", x: 374, y: 239, size: 64, isValid: function() {return false}},
+		"slot2": {type: "slot", x: 374, y: 239, size: 64, isValid: function(){return false}},
 		"textInput": {type: "text", x: 520, y: 130},
 		"textOutput": {type: "text", x: 520, y: 170},
 		"textEnergy": {type: "text", x: 520, y: 210},
@@ -83,7 +84,7 @@ var guiMT = new UI.StandartWindow({
 });
 
 var MTParticles = [];
-for(let i = 0; i < 16; i++) {
+for (let i = 0; i < 16; i++) {
 	MTParticles.push(Particles.registerParticleType({
 		texture: "mt_work_" + i,
 		size: [2, 2],
@@ -93,8 +94,6 @@ for(let i = 0; i < 16; i++) {
 }
 
 ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
-	emitter: new Particles.ParticleEmitter(this.x + 0.5, this.y + 2, this.z + 0.5),
-
 	defaultValues: {
 		id: 0,
 		data: 0,
@@ -102,6 +101,12 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 		energyNeed: 0
 	},
 	
+	emitter: new Particles.ParticleEmitter(this.x + .5, this.y + 2, this.z + .5),
+
+	emitParticle: function(){
+		this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, this.x + .5, this.y + .5, this.z + .5);
+	},
+
 	getTier: function() {
 		return 14;
 	},
@@ -110,14 +115,11 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 		return guiMT;
 	},
 	
-	getTransportSlots: function(){
-		return {input: ["slot1"], output: ["slot2"]};
-	},
-	
 	destroy: function(){
-		if(this.data.id && this.data.energyNeed) World.drop(this.x + 0.5, this.y, this.z + 0.5, this.data.id, 1, this.data.data);
+		if (this.data.id && this.data.energyNeed)
+			World.drop(this.x + .5, this.y, this.z + .5, this.data.id, 1, this.data.data);
 	},
-	
+
 	tick: function() {
 		StorageInterface.checkHoppers(this);
 		
@@ -132,32 +134,32 @@ ICore.Machine.registerElectricMachine(BlockID.molecularTransformer, {
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", this.data.id, this.data.data);
 		}
 		if (result) {
-			this.container.setText("textInput", "Input: " + Item.getName(this.data.id, this.data.data));
+			this.container.setText("textInput", Translation.translate("Input: ") + Item.getName(this.data.id, this.data.data));
 			var itemName = Item.getName(result.id, result.data);
 			if (itemName[0] == '§') itemName = itemName.slice(2);
-			this.container.setText("textOutput", "Output: " + itemName);
-			this.container.setText("textEnergy", "Energy: " + result.energy);
-			this.container.setText("textProgress", "Progress: " + parseInt(this.data.progress / result.energy * 100) + "%");
+			this.container.setText("textOutput", Translation.translate("Output: ") + itemName);
+			this.container.setText("textEnergy", Translation.translate("Energy: ") + result.energy);
+			this.container.setText("textProgress", Translation.translate("Progress: ") + parseInt(this.data.progress / result.energy * 100) + "%");
 			this.container.setScale("progressScale", this.data.progress / result.energy);
 			if (this.data.last_energy_receive > 0) {
-				this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, this.x + 0.5, this.y + 0.5, this.z + 0.5);
+				this.emitParticle();
 				var slot2 = this.container.getSlot("slot2");
-				if (this.data.progress >= result.energy && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
+				if (this.data.progress >= result.energy &&
+				  (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
 					this.data.id = this.data.data = 0;
 					slot2.id = result.id;
 					slot2.data = result.data;
 					slot2.count++;
-					this.data.id = this.data.data = 0;
 					this.data.progress = this.data.energyNeed = 0;
 				}
 			}
 		}
 		else {
 			this.container.setScale("progressScale", 0);
-			this.container.setText("textInput", "Input:    ");
-			this.container.setText("textOutput", "Output:   ");
-			this.container.setText("textEnergy", "Energy:   ");
-			this.container.setText("textProgress", "Progress: ");
+			this.container.setText("textInput", Translation.translate("Input: "));
+			this.container.setText("textOutput", Translation.translate("Output: "));
+			this.container.setText("textEnergy", Translation.translate("Energy: "));
+			this.container.setText("textProgress", Translation.translate("Progress: "));
 		}
 	},
 	
