@@ -1,0 +1,29 @@
+{
+  "enabled":true,
+  "advanced_solar_panel":{
+    "output":32,
+    "gen_day":8,
+    "storage":32000,
+    "gen_night":1
+  },
+  "hybrid_solar_panel":{
+    "output":128,
+    "gen_day":64,
+    "storage":100000,
+    "gen_night":8
+  },
+  "ultimate_solar_panel":{
+    "output":512,
+    "gen_day":512,
+    "storage":1000000,
+    "gen_night":64
+  },
+  "quantum_solar_panel":{
+    "output":8192,
+    "gen_day":4096,
+    "storage":10000000,
+    "gen_night":2048
+  },
+  "simple_asp_recipe":false,
+  "hard_recipes":true
+}

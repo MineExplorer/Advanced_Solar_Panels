@@ -1,0 +1,9 @@
+header.ts
+api.ts
+config.ts
+translation.ts
+
+machine/solar_panels.ts
+machine/MolecularTransformer.ts
+
+items/**/*

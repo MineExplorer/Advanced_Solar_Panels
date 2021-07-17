@@ -1,0 +1,44 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"lib": [
+			"ESNext"
+		],
+		"outFile": "C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\build\\project\\sources\\main.js",
+		"experimentalDecorators": true,
+		"downlevelIteration": true,
+		"allowJs": true
+	},
+	"exclude": [
+		"**/node_modules/*",
+		"dom",
+		"webpack"
+	],
+	"include": [
+		"header.ts",
+		"api.ts",
+		"config.ts",
+		"translation.ts",
+		"machine/solar_panels.ts",
+		"machine/MolecularTransformer.ts",
+		"items/AdvSolarHelmet.ts",
+		"items/components.ts",
+		"items/helmets.ts",
+		"items/HybridSolarHelmet.ts",
+		"items/UltimateSolarHelmet.ts"
+	],
+	"files": [
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\android-declarations.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\android.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\BlockEngine.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\ChargeItem.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\core-engine.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\energy-net.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\IndustrialCraft.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\RecipeViewer.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\SoundLib.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\StorageInterface.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\TileRender.d.ts",
+		"C:\\Users\\vladg\\OneDrive\\\u0420\u0430\u0431\u043e\u0447\u0438\u0439 \u0441\u0442\u043e\u043b\\Dev\\Advanced_Solar_Panels\\toolchain\\declarations\\ToolLib.d.ts"
+	]
+}
