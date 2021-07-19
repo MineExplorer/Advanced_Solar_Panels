@@ -93,22 +93,31 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 		this.container.setSlotAddTransferPolicy("slot2", () => 0)
 	}
 
-	onDestroy(): void {
+	destroy(): boolean {
 		if (this.data.id && this.data.energyNeed)
 			this.region.dropItem(this.x + .5, this.y, this.z + .5, this.data.id, 1, this.data.data);
+		return false;
 	}
 
-	onInit(){
-		this.emitter = new Particles.ParticleEmitter(this.x + .5, this.y + .5, this.z + .5)
+	clientLoad(): void {
+		this.emitter = new Particles.ParticleEmitter(this.x + .5, this.y + .5, this.z + .5);
+		this.emitter.setEmitRelatively(true);
 	}
 
-	emitParticle(){
-		this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, 0, 0, 0);
+	clientUnload(): void {
+		this.emitter.release();
+	}
+
+	clientTick(): void {
+		if (this.networkData.getBoolean("active")) {
+			this.emitter.emit(MTParticles[World.getThreadTime() & 15], 0, 0, 0, 0);
+		}
 	}
 
 	onTick(): void {
 		StorageInterface.checkHoppers(this);
 
+		let newActive = false;
 		if (!this.data.id || !this.data.energyNeed) {
 			let slot1 = this.container.getSlot("slot1");
 			var result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
@@ -128,7 +137,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 			this.container.setText("textProgress", Translation.translate("Progress: ") + Math.floor(this.data.progress / result.energy * 100) + "%");
 			this.container.setScale("progressScale", this.data.progress / result.energy);
 			if (this.energyNode.energyIn > 0) {
-				this.emitParticle();
+				newActive = true;
 				let slot2 = this.container.getSlot("slot2");
 				if (this.data.progress >= result.energy &&
 				  (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
@@ -146,6 +155,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 			this.container.setText("textProgress", Translation.translate("Progress: "));
 		}
 		this.container.sendChanges();
+		this.setActive(newActive);
 	}
 
 	energyReceive(type: string, amount: number, voltage: number): number {
