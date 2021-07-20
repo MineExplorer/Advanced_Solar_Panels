@@ -34,7 +34,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 	}
 
 	destroy(): boolean {
-		if (this.data.id && this.data.energyNeed)
+		if (this.data.id)
 			this.region.dropItem(this.x + .5, this.y, this.z + .5, this.data.id, 1, this.data.data);
 		return false;
 	}
@@ -63,31 +63,19 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 	onTick(): void {
 		StorageInterface.checkHoppers(this);
 
-		let result: {id: number, count: number, data: number, energy: number};
-		let newActive = false;
-		if (!this.data.id || !this.data.energyNeed) {
-			let slot1 = this.container.getSlot("slot1");
-			let slot2 = this.container.getSlot("slot2");
-			result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
-			if (result && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
-				this.data.id = slot1.id;
-				this.data.data = slot1.data;
-			}
-		} else {
-			result = ICore.Recipe.getRecipeResult("molecularTransformer", this.data.id, this.data.data);
-		}
+		let input: {id: number, data: number} = this.data.id ? this.data : this.container.getSlot("slot1");
+		let result = ICore.Recipe.getRecipeResult("molecularTransformer", input.id, input.data);
 		if (result) {
-			this.container.setText("textInput", Translation.translate("Input: ") + this.getItemName(this.data));
+			this.container.setText("textInput", Translation.translate("Input: ") + this.getItemName(input));
 			this.container.setText("textOutput", Translation.translate("Output: ") + this.getItemName(result));
 			this.container.setText("textEnergy", Translation.translate("Energy: ") + result.energy);
 			this.container.setText("textProgress", Translation.translate("Progress: ") + Math.floor(this.data.progress / result.energy * 100) + "%");
 			this.container.setScale("progressScale", this.data.progress / result.energy);
-			if (this.energyNode.energyIn > 0) {
-				newActive = true;
+			if (this.data.energyNeed) { // if recipe is operating
 				if (this.data.progress >= result.energy) {
 					let slot2 = this.container.getSlot("slot2");
-					this.data.id = this.data.data = 0;
 					slot2.setSlot(result.id, slot2.count + result.count, result.data);
+					input.id = input.data = 0;
 					this.data.progress = this.data.energyNeed = 0;
 				}
 			}
@@ -100,22 +88,26 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 			this.container.setText("textProgress", Translation.translate("Progress: "));
 		}
 		this.container.sendChanges();
-		this.setActive(newActive);
+		this.setActive(this.energyNode.energyIn > 0);
 	}
 
 	energyReceive(type: string, amount: number, voltage: number): number {
-		if (this.data.id) {
-			if (!this.data.energyNeed) {
-				let slot1 = this.container.getSlot("slot1");
-				let result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
+		if (!this.data.energyNeed) {
+			let slot1 = this.container.getSlot("slot1");
+			let slot2 = this.container.getSlot("slot2");
+			let result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
+			if (result && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
+				this.data.id = slot1.id;
+				this.data.data = slot1.data;
 				this.data.energyNeed = result.energy;
 				this.decreaseSlot(slot1, 1);
+			} else {
+				return 0;
 			}
-			let add = Math.min(amount, this.data.energyNeed - this.data.progress);
-			this.data.progress += add;
-			return add;
 		}
-		return 0;
+		let add = Math.min(amount, this.data.energyNeed - this.data.progress);
+		this.data.progress += add;
+		return add;
 	}
 }
 
