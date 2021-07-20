@@ -11,7 +11,7 @@ function getSolarPanelGuiContent(name: string, maxOutput: number): UI.WindowCont
 		},
 		
 		drawing: [
-			{type: "background", color: android.graphics.Color.parseColor("#353535")},
+			{type: "background", color: Color.parseColor("#353535")},
 			{type: "bitmap", x: 350, y: 40, bitmap: "asp_background", scale: 2.1},
 			{type: "bitmap", x: 398, y: 107, bitmap: "asp_energybar_0", scale: GUI_SCALE},
 		],

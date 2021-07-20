@@ -16,3 +16,4 @@ IMPORT("ChargeItem");
 IMPORT("StorageInterface");
 
 const GUI_SCALE = 3.2;
+const Color = android.graphics.Color;

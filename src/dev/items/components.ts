@@ -82,7 +82,7 @@ Callback.addCallback("PreLoaded", function() {
 		"aba",
 		"cdc",
 		"axa"
-	], ['a', 331, 0, 'b', ItemID.sunnariumPart, 0, 'c', 351, 4, 'd', ItemID.plateReinforcedIridiumIron, 0, 'x', 264, 0]);
+	], ['a', 331, 0, 'b', ItemID.sunnariumPart, 0, 'c', IDConverter.getID("lapis_lazuli"), IDConverter.getData("lapis_lazuli"), 'd', ItemID.plateReinforcedIridiumIron, 0, 'x', 264, 0]);
 
 	Recipes.addShaped({id: ItemID.mtCore, count: 1, data: 0}, [
 		"aba",

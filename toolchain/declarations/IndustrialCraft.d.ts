@@ -1,9 +1,3 @@
-declare const Color: typeof globalAndroid.graphics.Color;
-declare const PotionEffect: typeof Native.PotionEffect;
-declare const ParticleType: typeof Native.ParticleType;
-declare const BlockSide: typeof Native.BlockSide;
-declare const EntityType: typeof Native.EntityType;
-declare const EU: EnergyType;
 declare function randomInt(min: number, max: number): number;
 declare function addShapelessRecipe(result: ItemInstance, source: ItemInstance[]): void;
 declare namespace Agriculture {
@@ -2488,11 +2482,6 @@ declare class UpgradeMFSU extends ItemCommon implements ItemBehavior {
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
 declare const painterCreativeGroup: number[];
-declare let RV: {
-    Core: any;
-    RecipeType: typeof RecipeType;
-    RecipeTypeRegistry: RecipeTypeRegistry;
-};
 declare const ICore: {
     Machine: typeof MachineRegistry;
     Recipe: typeof MachineRecipeRegistry;
