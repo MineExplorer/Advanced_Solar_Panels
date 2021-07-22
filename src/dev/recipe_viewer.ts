@@ -42,8 +42,8 @@ ModAPI.addAPICallback("RecipeViewer", (api: typeof RV) => {
 		}
 
       	onOpen(elements: java.util.HashMap<string, UI.Element>, recipe: RecipePattern): void {
-			elements.get("textInput").setBinding("text", this.getItemName(recipe.input[0]));
-			elements.get("textOutput").setBinding("text", this.getItemName(recipe.output[0]));
+			elements.get("textInput").setBinding("text", Translation.translate("Input: ") + this.getItemName(recipe.input[0]));
+			elements.get("textOutput").setBinding("text", Translation.translate("Output: ") + this.getItemName(recipe.output[0]));
 			elements.get("textEnergy").setBinding("text", Translation.translate("Energy: ") + recipe.energy);
 		}
 
