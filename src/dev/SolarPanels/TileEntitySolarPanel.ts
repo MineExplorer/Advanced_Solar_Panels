@@ -29,15 +29,16 @@ class TileEntitySolarPanel extends Machine.Generator {
 	getTier(): number {
 		return 4;
 	}
-	
+
 	onInit(): void {
+		super.onInit();
 		this.data.canSeeSky = GenerationUtils.canSeeSky(this.x, this.y + 1, this.z);
 	}
 
 	setupContainer(): void {
 		StorageInterface.setGlobalValidatePolicy(this.container, (_, id) => ChargeItemRegistry.isValidItem(id, "Eu", 4));
 	}
-	
+
 	onTick(): void {
 		let generating = 0;
 
@@ -45,7 +46,7 @@ class TileEntitySolarPanel extends Machine.Generator {
 			this.data.canSeeSky = this.region.canSeeSky(this.x, this.y + 1, this.z);
 		}
 		if (this.data.canSeeSky) {
-			let time = World.getWorldTime() % 24000;
+			const time = World.getWorldTime() % 24000;
 			if ((time >= 23500 || time < 12550) && (!World.getWeather().rain || this.region.getLightLevel(this.x, this.y + 1, this.z) == 15)) {
 				generating = this.genDay;
 				this.container.sendEvent("setLightIcon", "asp_sun");
@@ -59,17 +60,17 @@ class TileEntitySolarPanel extends Machine.Generator {
 		else {
 			this.container.sendEvent("setLightIcon", "asp_dark");
 		}
-		
+
 		for (let i = 1; i <= 4; i++) {
 			this.data.energy -= ChargeItemRegistry.addEnergyTo(this.container.getSlot("slot"+i), "Eu", this.data.energy, 4);
 		}
-		
+
 		this.container.setText("textGen", Translation.translate("Generating: ") + generating + " EU/t");
 		this.container.setText("textStorage", Translation.translate("Storage: ") + this.data.energy + "/" + this.energyStorage);
 		this.container.setScale("energyScale", this.data.energy / this.energyStorage);
 		this.container.sendChanges();
 	}
-	
+
 	getEnergyStorage(): number {
 		return this.energyStorage;
 	}
@@ -87,7 +88,7 @@ class TileEntitySolarPanel extends Machine.Generator {
 }
 
 function createSolarPanel(stringID: string, name: string, texture: string, properties: PanelProperties, rarity: EnumRarity): void {
-    let blockID = IDRegistry.genBlockID(stringID);
+    const blockID = IDRegistry.genBlockID(stringID);
     Block.createBlock(stringID, [
         {name: name, texture: [[texture, 2], [texture, 1], [texture, 0], [texture, 0], [texture, 0], [texture, 0]], inCreative: true}
     ], "machine");

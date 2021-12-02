@@ -5,7 +5,7 @@ namespace MolecularTransformer {
 	Block.createBlock("molecularTransformer", [
 		{name: "Molecular Transformer", texture: [["molecular_transformer", 0]], inCreative: true}
 	]);
-	
+
 	ItemRegistry.setRarity(blockID, EnumRarity.RARE);
 
 	const mesh = new RenderMesh();
@@ -24,7 +24,7 @@ Callback.addCallback("PreLoaded", function() {
 		"cxc",
 		"aba"
 	], ['x', ItemID.mtCore, 0, 'a', BlockID.machineBlockAdvanced, 0, 'b', BlockID.transformerEV, 0, 'c', ItemID.circuitAdvanced, 0]);
-	
+
 	const mt_recipes = {
 		"minecraft:skull:1": {id: 399, count: 1, data: 0, energy: 25e7},
 		"minecraft:iron_ingot": {id: ItemID.iridiumChunk, count: 1, data: 0, energy: 9e6},
@@ -51,7 +51,7 @@ Callback.addCallback("PreLoaded", function() {
 		// nether quartz -> certus quartz 5e5
 	}
 	for (let key in mt_recipes) {
-		let result = mt_recipes[key];
+		const result = mt_recipes[key];
 		if (!result.id) {
 			delete mt_recipes[key];
 		}

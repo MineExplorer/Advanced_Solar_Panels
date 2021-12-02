@@ -55,7 +55,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 	}
 
 	getItemName(item: {id: number, data: number}) {
-		let name = Item.getName(item.id, item.data);
+		const name = Item.getName(item.id, item.data);
 		if (name[0] == '§') return name.slice(2);
 		return name;
 	}
@@ -63,8 +63,8 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 	onTick(): void {
 		StorageInterface.checkHoppers(this);
 
-		let input: {id: number, data: number} = this.data.id ? this.data : this.container.getSlot("slot1");
-		let result = ICore.Recipe.getRecipeResult("molecularTransformer", input.id, input.data);
+		const input: {id: number, data: number} = this.data.id ? this.data : this.container.getSlot("slot1");
+		const result = ICore.Recipe.getRecipeResult("molecularTransformer", input.id, input.data);
 		if (result) {
 			this.container.setText("textInput", Translation.translate("Input: ") + this.getItemName(input));
 			this.container.setText("textOutput", Translation.translate("Output: ") + this.getItemName(result));
@@ -73,7 +73,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 			this.container.setScale("progressScale", this.data.progress / result.energy);
 			if (this.data.energyNeed) { // if recipe is operating
 				if (this.data.progress >= result.energy) {
-					let slot2 = this.container.getSlot("slot2");
+					const slot2 = this.container.getSlot("slot2");
 					slot2.setSlot(result.id, slot2.count + result.count, result.data);
 					input.id = input.data = 0;
 					this.data.progress = this.data.energyNeed = 0;
@@ -93,9 +93,9 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 
 	energyReceive(type: string, amount: number, voltage: number): number {
 		if (!this.data.energyNeed) {
-			let slot1 = this.container.getSlot("slot1");
-			let slot2 = this.container.getSlot("slot2");
-			let result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
+			const slot1 = this.container.getSlot("slot1");
+			const slot2 = this.container.getSlot("slot2");
+			const result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
 			if (result && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
 				this.data.id = slot1.id;
 				this.data.data = slot1.data;
@@ -105,7 +105,7 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 				return 0;
 			}
 		}
-		let add = Math.min(amount, this.data.energyNeed - this.data.progress);
+		const add = Math.min(amount, this.data.energyNeed - this.data.progress);
 		this.data.progress += add;
 		return add;
 	}

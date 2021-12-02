@@ -30,8 +30,8 @@ ModAPI.addAPICallback("RecipeViewer", (api: typeof RV) => {
 			const list: RecipePattern[] = [];
 			const recipe: {[key: string]: {id: number, count: number, data: number, energy: number}} = ICore.Recipe.requireRecipesFor("molecularTransformer");
 			for (let key in recipe) {
-				let input = key.split(":");
-				let result = recipe[key];
+				const input = key.split(":");
+				const result = recipe[key];
 				list.push({
 					input: [{id: +input[0], count: 1, data: +input[1] || 0}],
 					output: [{id: result.id, count: result.count, data: result.data}],
@@ -48,7 +48,7 @@ ModAPI.addAPICallback("RecipeViewer", (api: typeof RV) => {
 		}
 
 		getItemName(item: {id: number, data: number}) {
-			let name = Item.getName(item.id, item.data);
+			const name = Item.getName(item.id, item.data);
 			if (name[0] == '§') return name.slice(2);
 			return name;
 		}

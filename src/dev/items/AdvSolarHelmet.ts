@@ -23,8 +23,8 @@ function solarHelmetTick(playerUid: number, genDay: number, genNight: number) {
 		}
         if (region.canSeeSky(pos) && (!World.getWeather().rain || region.getLightLevel(pos) > 14)) {
             for (let i = 0; i < 4; i++) {
-                let armor = Entity.getArmorSlot(playerUid, i);
-                let energyAdd = ChargeItemRegistry.addEnergyTo(armor, "Eu", energy, 4);
+                const armor = Entity.getArmorSlot(playerUid, i);
+                const energyAdd = ChargeItemRegistry.addEnergyTo(armor, "Eu", energy, 4);
                 if (energyAdd > 0) {
                     energy -= energyAdd;
                     Entity.setArmorSlot(playerUid, i, armor.id, 1, armor.data, armor.extra);
