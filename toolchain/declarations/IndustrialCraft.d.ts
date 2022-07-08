@@ -1,5 +1,3 @@
-declare function randomInt(min: number, max: number): number;
-declare function addSingleItemRecipe(recipeName: string, sourceID: string, resultID: string, count?: number, data?: number): void;
 declare namespace Agriculture {
     let NutrientBiomeBonus: {
         21: number;
@@ -159,6 +157,9 @@ declare namespace Agriculture {
         getProperties(): CropCardProperties;
         getBaseSeed(): BaseSeed;
         getGain(te: ICropTileEntity): ItemInstance;
+        onLeftClick(te: ICropTileEntity, player: number): boolean;
+        canBeHarvested(te: ICropTileEntity): boolean;
+        onEntityCollision(te: ICropTileEntity, entity: number): boolean;
     }
 }
 declare namespace Agriculture {
@@ -495,6 +496,7 @@ declare namespace IC2Config {
     let soundEnabled: boolean;
     let machineSoundEnabled: boolean;
     let voltageEnabled: boolean;
+    let hardRecipes: boolean;
     function getBool(name: string): boolean;
     function getInt(name: string): number;
     function getFloat(name: string): number;
@@ -589,14 +591,16 @@ declare namespace IntegrationAPI {
     function addToolBooxValidItem(id: number): void;
 }
 declare namespace ItemName {
+    /**@deprecated */
     function setRarity(id: number, rarity: number): void;
+    /**@deprecated */
     function getRarity(id: number): number;
     function addTooltip(id: number, tooltip: string): void;
-    function addTierTooltip(stringID: string, tier: number): void;
-    function addStorageBlockTooltip(stringID: string, tier: number, capacity: string): void;
-    function showBlockStorage(item: ItemInstance, name: string, tier: number, capacity: string): string;
+    function addTierTooltip(blockID: string | number, tier: number): void;
+    function addStorageBlockTooltip(blockID: string | number, tier: number, capacity: string): void;
+    function getBlockStorageText(item: ItemInstance, tier: number, capacity: string): string;
+    function getPowerTierText(tier: number): string;
     function getItemStorageText(item: ItemInstance): string;
-    function showItemStorage(item: ItemInstance, name: string): string;
     function displayEnergy(energy: number, debug?: boolean): string;
 }
 declare namespace Machine {
@@ -609,9 +613,7 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
-    let ClientSide: typeof BlockEngine.Decorators.ClientSide;
-    let NetworkEvent: typeof BlockEngine.Decorators.NetworkEvent;
-    let ContainerEvent: typeof BlockEngine.Decorators.ContainerEvent;
+    let ClientSide: typeof BlockEngine.Decorators.ClientSide, NetworkEvent: typeof BlockEngine.Decorators.NetworkEvent, ContainerEvent: typeof BlockEngine.Decorators.ContainerEvent;
     abstract class MachineBase extends TileEntityBase implements IWrenchable {
         upgrades?: string[];
         defaultDrop?: number;
@@ -677,6 +679,7 @@ declare namespace MachineRegistry {
     function registerGenerator(id: number, Prototype: TileEntity.TileEntityPrototype): void;
     function createStorageInterface(blockID: number, descriptor: StorageDescriptor): void;
     function setStoragePlaceFunction(blockID: string | number, hasVerticalRotation?: boolean): void;
+    /**@deprecated */
     function getMachineDrop(blockID: number, level: number): ItemInstanceArray[];
     function setMachineDrop(blockID: string | number, dropID?: number): void;
     function fillTankOnClick(tank: BlockEngine.LiquidTank, item: ItemInstance, playerUid: number): boolean;
@@ -715,6 +718,12 @@ declare namespace MachineRecipeRegistry {
         sourceCount?: number;
     };
 }
+declare namespace MathUtil {
+    function randomInt(min: number, max: number): number;
+    function setInRange(value: number, minValue: number, maxValue: number): number;
+}
+/** @deprecated */
+declare const randomInt: typeof MathUtil.randomInt;
 declare namespace RadiationAPI {
     type RadiationSource = {
         x: number;
@@ -724,8 +733,8 @@ declare namespace RadiationAPI {
         radius: number;
         timer: number;
     };
-    export let radioactiveItems: {};
-    export let hazmatArmor: {};
+    export const radioactiveItems: {};
+    export const hazmatArmor: {};
     export let sources: RadiationSource[];
     export let effectDuration: {};
     export function setRadioactivity(itemID: number, duration: number, stack?: boolean): void;
@@ -734,21 +743,19 @@ declare namespace RadiationAPI {
         stack: number;
     };
     export function isRadioactiveItem(itemID: number): boolean;
-    export function emitItemRadiation(entity: number, itemID: number): void;
-    export function getRadiation(playerUid: number): number;
-    export function resetRadiation(playerUid: number): void;
-    export function setRadiation(playerUid: number, duration: number): void;
-    export function addRadiation(playerUid: number, duration: number): void;
+    export function emitItemRadiation(entity: number, itemID: number): boolean;
     export function registerHazmatArmor(itemID: number): void;
     export function isHazmatArmor(itemID: number): boolean;
     export function hasHazmatSuit(playerUid: number): boolean;
+    export function getRadiation(playerUid: number): number;
+    export function setRadiation(playerUid: number, duration: number): void;
+    export function addRadiation(playerUid: number, duration: number): void;
     export function addEffect(ent: number, duration: number): void;
     export function addEffectInRange(region: WorldRegion, x: number, y: number, z: number, radius: number, duration: number): void;
     export function addRadiationSource(x: number, y: number, z: number, dimension: number, radius: number, duration: number): void;
     export {};
 }
 interface IWrech {
-    dropChance: number;
     isUseable(item: ItemInstance, damage: number): boolean;
     useItem(item: ItemStack, damage: number, player: number): void;
 }
@@ -894,26 +901,6 @@ declare namespace WindSim {
     let windStrength: number;
     function getWindAt(height: number): number;
 }
-declare namespace RubberTreeGenerator {
-    let biomeData: {};
-    function getBiomeChance(biomeID: number): number;
-    function growRubberTree(region: BlockSource, x: number, y: number, z: number): void;
-    function generateRubberTree(region: BlockSource, x: number, y: number, z: number, random: java.util.Random, replacePlants?: boolean): void;
-    function getGrowHeight(region: BlockSource, x: number, y: number, z: number, max: number, replacePlants: boolean): number;
-    function setLeaves(region: BlockSource, x: number, y: number, z: number): void;
-}
-declare const ForestBiomeIDs: number[];
-declare const JungleBiomeIDs: number[];
-declare const SwampBiomeIDs: number[];
-declare let chance: number;
-declare function checkLeaves(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
-declare function checkLeavesFor6Sides(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
-declare function updateLeaves(x: number, y: number, z: number, region: BlockSource): void;
-declare let DIRT_TILES: {
-    2: boolean;
-    3: boolean;
-    60: boolean;
-};
 declare namespace OreGenerator {
     type OreProperties = {
         enabled: boolean;
@@ -935,6 +922,52 @@ declare namespace OreGenerator {
     export function randomCoords(random: java.util.Random, chunkX: number, chunkZ: number, minHeight?: number, maxHeight?: number): Vector;
     export function generateOre(chunkX: number, chunkZ: number, blockID: number, properties: OreProperties, random: java.util.Random): void;
     export {};
+}
+declare namespace RubberTreeGenerator {
+    let biomeData: {};
+    function getBiomeChance(biomeID: number): number;
+    function growRubberTree(region: BlockSource, x: number, y: number, z: number): void;
+    function generateRubberTree(region: BlockSource, x: number, y: number, z: number, random: java.util.Random, replacePlants?: boolean): void;
+    function getGrowHeight(region: BlockSource, x: number, y: number, z: number, max: number, replacePlants: boolean): number;
+    function setLeaves(region: BlockSource, x: number, y: number, z: number): void;
+    function readRubberTreeConfig(): void;
+}
+declare class BlockRubberTreeLeaves extends BlockBase {
+    constructor();
+    getDrop(coords: Vector, block: Tile, level: number, enchant: ToolAPI.EnchantData, item: ItemStack): ItemInstanceArray[];
+    checkLeaves(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
+    checkLeavesFor6Sides(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
+    updateLeaves(x: number, y: number, z: number, region: BlockSource): void;
+    onRandomTick(x: number, y: number, z: number, block: Tile, region: BlockSource): void;
+    onDestroy(coords: Vector, block: Tile, region: BlockSource, player: number): void;
+    onBreak(coords: Vector, block: Tile, region: BlockSource): void;
+}
+declare class BlockRubberTreeLog extends BlockBase {
+    constructor();
+    getDrop(coords: Vector, block: Tile, level: number): ItemInstanceArray[];
+    onPlace(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number, region: BlockSource): void;
+}
+declare class BlockRubberTreeSapling extends BlockBase implements BlockItemBehavior {
+    PLACEABLE_TILES: {
+        2: boolean;
+        3: boolean;
+        60: boolean;
+    };
+    constructor();
+    getDrop(): ItemInstanceArray[];
+    onNeighbourChange(coords: Vector, block: Tile, changeCoords: Vector, region: BlockSource): void;
+    onRandomTick(x: number, y: number, z: number, block: Tile, region: BlockSource): void;
+    onClick(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, playerUid: number): void;
+    onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
+}
+declare class BlockOre extends BlockBase {
+    constructor(id: string, oreName: string, miningLevel: number);
+}
+declare class BlockResource extends BlockBase {
+    constructor(id: string, resourceName: string, miningLevel: number);
+}
+declare class BlockStone extends BlockBase {
+    constructor(id: string, name: string, texture: [string, number][], miningLevel?: number);
 }
 declare namespace Agriculture {
     class CropTile extends TileEntityBase {
@@ -961,7 +994,7 @@ declare namespace Agriculture {
         clientLoad(): void;
         clientUnload(): void;
         onInit(): void;
-        tick(): void;
+        onTick(): void;
         onLongClick(playerUid: number): boolean;
         onItemClick(id: number, count: number, data: number, coords: Callback.ItemUseCoordinates, playerUid: number, extra: ItemExtraData): boolean;
         destroyBlock(coords: Callback.ItemUseCoordinates, playerUid: number): void;
@@ -1080,8 +1113,16 @@ declare namespace Machine {
         defaultValues: {
             energy: number;
             output: number;
+            biome: any;
+            ticker: number;
+            blockCount: number;
         };
-        biomeCheck(x: number, z: number): "ocean" | "river";
+        BASE_POWER: number;
+        isOcean(biome: number): boolean;
+        isRiver(biome: number): boolean;
+        getBiome(x: number, z: number): number;
+        onInit(): void;
+        updateBlockCount(): void;
         energyTick(type: string, src: EnergyTileNode): void;
         canRotate(side: number): boolean;
     }
@@ -1836,7 +1877,7 @@ declare namespace Machine {
         onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
         onTick(): void;
         scan(): void;
-        getSlot(type: string): ItemContainerSlot;
+        getSlot(type: string): Nullable<ItemContainerSlot>;
         getEnergyStorage(): number;
         canRotate(side: number): boolean;
     }
@@ -1872,7 +1913,7 @@ declare namespace Machine {
         getEnergyStorage(): number;
     }
 }
-declare let SCRAP_BOX_RANDOM_DROP: {
+declare const SCRAP_BOX_RANDOM_DROP: {
     chance: number;
     id: number;
     data: number;
@@ -2109,7 +2150,7 @@ declare class ArmorIC2 extends ItemArmor {
     constructor(stringID: string, name: string, params: ArmorParams, inCreative?: boolean);
     setArmorTexture(name: string): void;
 }
-declare class ArmorHazmat extends ArmorIC2 implements OnHurtListener, OnTickListener {
+declare class ArmorHazmat extends ArmorIC2 implements ArmorListeners {
     constructor(stringID: string, name: string, params: ArmorParams);
     onHurt(params: {
         attacker: number;
@@ -2118,7 +2159,7 @@ declare class ArmorHazmat extends ArmorIC2 implements OnHurtListener, OnTickList
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): void;
 }
-declare abstract class ArmorElectric extends ArmorIC2 implements IElectricItem, OnHurtListener, OnTickListener {
+declare abstract class ArmorElectric extends ArmorIC2 implements IElectricItem, ArmorListeners {
     energy: string;
     maxCharge: number;
     transferLimit: number;
@@ -2150,6 +2191,7 @@ declare class ArmorJetpackElectric extends ArmorElectric {
 declare class ArmorBatpack extends ArmorElectric {
     constructor(stringID: string, name: string, maxCharge: number, transferLimit: number, tier: number);
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
+    static chargeCarriedItem(itemData: IElectricItem, stack: ItemInstance, playerUid: number): ItemInstance;
 }
 declare class ArmorNightvisionGoggles extends ArmorElectric {
     constructor();
@@ -2246,17 +2288,17 @@ declare const QUANTUM_ARMOR_FUNCS: {
     }, item: ItemInstance, index: number) => boolean;
     tick: (item: ItemInstance, index: number) => boolean;
 };
-declare class ArmorSolarHelmet extends ArmorIC2 implements OnTickListener {
+declare class ArmorSolarHelmet extends ArmorIC2 implements ArmorListeners {
     constructor(stringID: string, name: string, params: ArmorParams);
     onTick(item: ItemInstance, index: number, playerUid: number): void;
 }
-declare const toolbox_items: number[];
+declare const toolboxItems: number[];
 declare const guiContainmentBox: UI.StandartWindow;
 declare class DebugItem extends ItemElectric {
     canProvideEnergy: boolean;
     constructor();
-    onCharge(item: ItemInstance, amount: number, tier: number): number;
-    onDischarge(item: ItemInstance, amount: number, tier: number): number;
+    onCharge(item: ItemInstance, amount: number, tier: number, addAll: boolean): number;
+    onDischarge(item: ItemInstance, amount: number, tier: number, getAll: boolean): number;
     onNameOverride(item: ItemInstance, name: string): string;
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
@@ -2275,7 +2317,9 @@ declare class EUMeterUpdatable {
     openGuiFor(client: NetworkClient): void;
     resetValues(): void;
     tick(): void;
-    displayValue(value: number, unit: string): string;
+    getUnit(): string;
+    getValue(): number;
+    displayValue(value: number): string;
     destroy(): void;
 }
 declare class EUMeter extends ItemCommon implements ItemBehavior {
@@ -2305,13 +2349,11 @@ declare class ItemTreetap extends ItemCommon {
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
 declare class ToolWrench extends ItemCommon implements IWrech {
-    dropChance: number;
-    constructor(stringID: string, name: string, icon: string, dropChance: number);
+    constructor(stringID: string, name: string, icon: string);
     isUseable(item: ItemInstance, damage: number): boolean;
     useItem(item: ItemStack, damage: number, player: number): void;
 }
 declare class ElectricWrench extends ItemElectric implements IWrech {
-    dropChance: number;
     energyPerUse: number;
     constructor();
     isUseable(item: ItemInstance, damage: number): boolean;
@@ -2485,7 +2527,6 @@ declare class UpgradeMFSU extends ItemCommon implements ItemBehavior {
     constructor();
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
-declare const painterCreativeGroup: number[];
 declare const ICore: {
     Machine: typeof MachineRegistry;
     Recipe: typeof MachineRecipeRegistry;
