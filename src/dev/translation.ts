@@ -4,6 +4,7 @@ Translation.addTranslation("Hybrid Solar Panel", {ru: "Гибридная сол
 Translation.addTranslation("Ultimate Solar Panel", {ru: "Совершенная солнечная панель", zh: "终极混合太阳能发电机"});
 Translation.addTranslation("Quantum Solar Panel", {ru: "Квантовая солнечная панель", zh: "量子太阳能发电机"});
 Translation.addTranslation("Molecular Transformer", {ru: "Молекулярный преобразователь", zh: "分子重组仪"});
+Translation.addTranslation("quantum_generator", {en: "Quantum Generator", ru: "Квантовый генератор", zh: "量子发电机"});
 
 // Items
 Translation.addTranslation("Sunnarium Part", {ru: "Часть саннариума", zh: "小块阳光化合物"});
