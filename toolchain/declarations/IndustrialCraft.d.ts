@@ -2432,6 +2432,7 @@ declare class ToolDrillIridium extends ToolDrill implements IModeSwitchable {
         modifier: number;
     }, destroyTime: number): number;
     onDestroy(item: ItemInstance, coords: Callback.ItemUseCoordinates, block: Tile, player: number): boolean;
+    private destroy3x3Area;
 }
 declare class ItemNanoSaber extends ElectricTool {
     damage: number;
@@ -2439,6 +2440,8 @@ declare class ItemNanoSaber extends ElectricTool {
     onIconOverride(item: ItemInstance): Item.TextureData;
     onAttack(item: ItemInstance, victim: number, attacker: number): boolean;
     onNoTargetUse(item: ItemStack, player: number): void;
+    /** KEX compatibility for dynamic Nano Saber damage */
+    getAttackDamageBonus(item: ItemInstance): number;
     static onTick(playerUid: number): void;
 }
 declare class ItemMiningLaser extends ItemElectric implements IModeSwitchable {

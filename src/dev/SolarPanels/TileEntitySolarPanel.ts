@@ -16,8 +16,8 @@ class TileEntitySolarPanel extends Machine.Generator {
 		super();
 		this.defaultDrop = null;
 		this.gui = new UI.StandartWindow(getSolarPanelGuiContent(name, props.output));
-		this.genDay = props.gen_day;
-		this.genNight = props.gen_night;
+		this.genDay = props.genDay;
+		this.genNight = props.genNight;
 		this.maxOutput = props.output;
 		this.energyStorage = props.storage;
 	}
@@ -85,13 +85,4 @@ class TileEntitySolarPanel extends Machine.Generator {
 			content.elements["light"].bitmap = data;
 		}
 	}
-}
-
-function createSolarPanel(stringID: string, name: string, texture: string, properties: PanelProperties, rarity: EnumRarity): void {
-    const blockID = IDRegistry.genBlockID(stringID);
-    Block.createBlock(stringID, [
-        {name: name, texture: [[texture, 2], [texture, 1], [texture, 0], [texture, 0], [texture, 0], [texture, 0]], inCreative: true}
-    ], "machine");
-    ItemRegistry.setRarity(blockID, rarity)
-    ICore.Machine.registerPrototype(blockID, new TileEntitySolarPanel(name, properties));
 }

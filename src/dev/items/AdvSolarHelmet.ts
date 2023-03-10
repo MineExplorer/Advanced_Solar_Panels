@@ -1,15 +1,16 @@
 class AdvSolarHelmet extends ArmorNanoHelmet {
+    solarPanel = new SolarHelmetComponent(ASPConfig.AdvancedSolar);
+
     constructor() {
         super("advSolarHelmet", "adv_solar_helmet", "adv_solar_helmet")
     }
 
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance {
-        solarHelmetTick(playerUid, ASP.gen_day*20, ASP.gen_night*20);
-        item = Entity.getArmorSlot(playerUid, 0);
+        this.solarPanel.onTick(item, playerUid);
         return super.onTick(item, index, playerUid);
     }
 }
-
+/*
 function solarHelmetTick(playerUid: number, genDay: number, genNight: number) {
     if (World.getThreadTime() % 20 != 0) return null;
     const region = WorldRegion.getForActor(playerUid);
@@ -17,10 +18,10 @@ function solarHelmetTick(playerUid: number, genDay: number, genNight: number) {
     const time = World.getWorldTime() % 24000;
     if (region.canSeeSky(pos)) {
         if ((time >= 23500 || time < 12550) && (!World.getWeather().rain || region.getLightLevel(pos) > 14)) {
-			var energy = genDay;
-		} else {
-			var energy = genNight;
-		}
+            var energy = genDay;
+        } else {
+            var energy = genNight;
+        }
         if (region.canSeeSky(pos) && (!World.getWeather().rain || region.getLightLevel(pos) > 14)) {
             for (let i = 0; i < 4; i++) {
                 const armor = Entity.getArmorSlot(playerUid, i);
@@ -33,4 +34,4 @@ function solarHelmetTick(playerUid: number, genDay: number, genNight: number) {
             }
         }
     }
-}
+}*/
