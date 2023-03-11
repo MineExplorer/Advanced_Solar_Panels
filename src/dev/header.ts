@@ -15,5 +15,6 @@ IMPORT("BlockEngine");
 IMPORT("ChargeItem");
 IMPORT("StorageInterface");
 
-const GUI_SCALE = 3.2;
+const guiScale = 3.2;
+const guiScaleNew = 5;
 const Color = android.graphics.Color;

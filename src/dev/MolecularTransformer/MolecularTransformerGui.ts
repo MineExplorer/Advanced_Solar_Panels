@@ -10,11 +10,11 @@ const guiMolecularTransformer = new UI.StandartWindow({
 	},
 
 	drawing: [
-		{type: "bitmap", x: 345, y: 92, bitmap: "molecular_background", scale: GUI_SCALE},
+		{type: "bitmap", x: 345, y: 92, bitmap: "molecular_background", scale: guiScale},
 	],
 
 	elements: {
-		"progressScale": {type: "scale", x: 390, y: 181, direction: 3, bitmap: "molecular_bar", scale: GUI_SCALE, clicker: {
+		"progressScale": {type: "scale", x: 390, y: 181, direction: 3, bitmap: "molecular_bar", scale: guiScale, clicker: {
 			onClick: () => {
 				RV?.RecipeTypeRegistry.openRecipePage("asp_molecular_transformer");
 			}

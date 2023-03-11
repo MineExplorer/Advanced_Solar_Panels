@@ -1,11 +1,4 @@
 /// <reference path="./QuantumGeneratorGui.ts" />
-BlockRegistry.createBlock("quantumGenerator", [
-    {name: "quantum_generator", texture: [["quantum_generator", 0]], inCreative: true}
-], "machine");
-ItemRegistry.setRarity(BlockID.quantumGenerator, EnumRarity.EPIC);
-
-ICore.Render.setStandardModel(BlockID.quantumGenerator, 0, [["quantum_generator", 0]]);
-ICore.Render.registerRenderModel(BlockID.quantumGenerator, 0, [["quantum_generator", 1]]);
 
 class TileEntityQuantumGenerator extends Machine.Generator {
 	defaultValues = {
@@ -23,11 +16,13 @@ class TileEntityQuantumGenerator extends Machine.Generator {
 	getTier(): number {
 		return 5;
 	}
-    
+
 	onTick(): void {
-        this.setActive(this.isEnabled && this.data.output > 0);
-		this.container.setText("textOutput", this.data.output);
-		this.container.setText("textVoltage", this.data.voltage);
+		const isActive = this.isEnabled && this.data.output > 0;
+        this.setActive(isActive);
+		this.container.setText("textOutputAmount", this.data.output);
+		this.container.setText("textVoltageAmount", this.data.voltage);
+		this.container.sendEvent("setIndicator", isActive ? "on" : "off");
 		this.container.sendChanges();
 	}
 
@@ -42,11 +37,9 @@ class TileEntityQuantumGenerator extends Machine.Generator {
     }
 
 	@BlockEngine.Decorators.ContainerEvent(Side.Client)
-	setLightIcon(container: ItemContainer, window: any, content: any, data: string): void {
+	setIndicator(container: ItemContainer, window: any, content: any, data: string): void {
 		if (content) {
-			content.elements["light"].bitmap = data;
+			content.elements["indicator"].bitmap = "quantum_generator_" + data;
 		}
 	}
 }
-
-ICore.Machine.registerPrototype(BlockID.quantumGenerator, new TileEntityQuantumGenerator());
