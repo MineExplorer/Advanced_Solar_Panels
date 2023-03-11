@@ -70,6 +70,10 @@
 		{
 			"source": "src/config.json",
 			"targetDir": "."
+		},
+		{
+			"source": "src/config.info.json",
+			"targetDir": "."
 		}
 	]
 }

@@ -1,0 +1,150 @@
+{
+    "properties": {
+        "enabled": {
+            "name": {
+                "en": "Enable mod",
+                "ru": "Включить мод"
+            }
+        },
+        "hard_recipes": {
+            "name": {
+                "en": "Hard recipes",
+                "ru": "Усложнённые рецепты"
+            },
+            "description": {
+                "en": "Solar panels crafting recipes requires uranium",
+                "ru": "Для крафта солнечных панелей требуется уран"
+            }
+        },
+        "advanced_solar_panel": {
+            "name": {
+                "en": "Advanced Solar Panel",
+                "ru": "Улучшенная солнечная панель"
+            },
+            "collapsible": true
+        },
+        "advanced_solar_panel.simple_recipe": {
+            "name": {
+                "en": "Simple crating recipe",
+                "ru": "Упрощённый рецепт крафта"
+            }
+        },
+        "advanced_solar_panel.output": {
+            "name": {
+                "en": "Energy output",
+                "ru": "Выход энергии"
+            }
+        },
+        "advanced_solar_panel.gen_day": {
+            "name": {
+                "en": "Daytime generation",
+                "ru": "Генерация днем"
+            }
+        },
+        "advanced_solar_panel.gen_night": {
+            "name": {
+                "en": "Generation at night",
+                "ru": "Генерация ночью"
+            }
+        },
+        "advanced_solar_panel.storage": {
+            "name": {
+                "en": "Energy Storage",
+                "ru": "Хранилище энергии"
+            }
+        },
+        "hybrid_solar_panel": {
+            "name": {
+                "en": "Hybrid Solar Panel",
+                "ru": "Гибридная солнечная панель"
+            },
+            "collapsible": true
+        },
+        "hybrid_solar_panel.output": {
+            "name": {
+                "en": "Energy output",
+                "ru": "Выход энергии"
+            }
+        },
+        "hybrid_solar_panel.gen_day": {
+            "name": {
+                "en": "Daytime generation",
+                "ru": "Генерация днем"
+            }
+        },
+        "hybrid_solar_panel.gen_night": {
+            "name": {
+                "en": "Generation at night",
+                "ru": "Генерация ночью"
+            }
+        },
+        "hybrid_solar_panel.storage": {
+            "name": {
+                "en": "Energy Storage",
+                "ru": "Хранилище энергии"
+            }
+        },
+        "ultimate_solar_panel": {
+            "name": {
+                "en": "Ultimate Solar Panel",
+                "ru": "Совершенная солнечная панель"
+            },
+            "collapsible": true
+        },
+        "ultimate_solar_panel.output": {
+            "name": {
+                "en": "Energy output",
+                "ru": "Выход энергии"
+            }
+        },
+        "ultimate_solar_panel.gen_day": {
+            "name": {
+                "en": "Daytime generation",
+                "ru": "Генерация днем"
+            }
+        },
+        "ultimate_solar_panel.gen_night": {
+            "name": {
+                "en": "Generation at night",
+                "ru": "Генерация ночью"
+            }
+        },
+        "ultimate_solar_panel.storage": {
+            "name": {
+                "en": "Energy Storage",
+                "ru": "Хранилище энергии"
+            }
+        },
+        "quantum_solar_panel": {
+            "name": {
+                "en": "Quantum Solar Panel",
+                "ru": "Квантовая солнечная панель"
+            },
+            "collapsible": true
+        },
+        "quantum_solar_panel.output": {
+            "name": {
+                "en": "Energy output",
+                "ru": "Выход энергии"
+            }
+        },
+        "quantum_solar_panel.gen_day": {
+            "name": {
+                "en": "Daytime generation",
+                "ru": "Генерация днем"
+            }
+        },
+        "quantum_solar_panel.gen_night": {
+            "name": {
+                "en": "Generation at night",
+                "ru": "Генерация ночью"
+            }
+        },
+        "quantum_solar_panel.storage": {
+            "name": {
+                "en": "Energy Storage",
+                "ru": "Хранилище энергии"
+            }
+        }
+    }
+}

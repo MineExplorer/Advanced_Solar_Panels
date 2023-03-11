@@ -9,7 +9,7 @@ namespace ASPConfig {
     export function getInt(name: string): number{
         return __config__.getNumber(name).intValue();
     }
-    
+
     export function getBool(name: string): boolean {
         return __config__.getBool(name);
     }

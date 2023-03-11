@@ -29,20 +29,15 @@ Callback.addCallback("PreLoaded", function() {
 		"aaa"
 	], ['a', BlockID.USP, 0, 'b', ItemID.quantumCore, 0]);
 
+	const aspCoreItem = __config__.getBool("advanced_solar_panel.simple_asp_recipe") ?
+		BlockID.machineBlockAdvanced : ItemID.plateIrradiantReinforced;
+
 	if (__config__.getBool("hard_recipes")) {
-		if (__config__.getBool("simple_asp_recipe")) {
-			Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
-				"aaa",
-				"bxb",
-				"cdc"
-			], ['x', BlockID.solarPanel, -1, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', BlockID.machineBlockAdvanced, 0]);
-		} else {
-			Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
-				"aaa",
-				"bxb",
-				"cdc"
-			], ['x', BlockID.solarPanel, 0, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', ItemID.plateIrradiantReinforced, 0]);
-		}
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
+			"aaa",
+			"bxb",
+			"cdc"
+		], ['x', BlockID.solarPanel, -1, 'a', ItemID.irradiantGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', aspCoreItem, 0]);
 
 		Recipes.addShaped({id: BlockID.HSP, count: 1, data: 0}, [
 			"afa",
@@ -57,19 +52,11 @@ Callback.addCallback("PreLoaded", function() {
 		], ['a', 22, -1, 'x', BlockID.ASP, 0, 'b', ItemID.coalChunk, 0, 'c', ItemID.enrichedSunnariumAlloy, 0]);
 	}
 	else {
-		if (__config__.getBool("simple_asp_recipe")) {
-			Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
-				"aaa",
-				"bxb",
-				"cdc"
-			], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', BlockID.machineBlockAdvanced, 0]);
-		} else {
-			Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
-				"aaa",
-				"bxb",
-				"cdc"
-			], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', ItemID.plateIrradiantReinforced, 0]);
-		}
+		Recipes.addShaped({id: BlockID.ASP, count: 1, data: 0}, [
+			"aaa",
+			"bxb",
+			"cdc"
+		], ['x', BlockID.solarPanel, 0, 'a', BlockID.reinforcedGlass, 0, 'b', ItemID.plateAlloy, 0, 'c', ItemID.circuitAdvanced, 0, 'd', aspCoreItem, 0]);
 
 		Recipes.addShaped({id: BlockID.HSP, count: 1, data: 0}, [
 			"afa",
