@@ -42,4 +42,18 @@ class TileEntityQuantumGenerator extends Machine.Generator {
 			content.elements["indicator"].bitmap = "quantum_generator_" + data;
 		}
 	}
+
+	@BlockEngine.Decorators.ContainerEvent(Side.Server)
+	changePower(container: ItemContainer, client: NetworkClient, data: {value: number}): void {
+		//this.data.output = Math.max(0, this.data.output + data.value);
+		Game.message(typeof(container) + " - " + container);
+		Game.message(typeof(client) + " - " + client);
+		Game.message(typeof(data) + " - " + data);
+		
+	}
+
+	@BlockEngine.Decorators.ContainerEvent(Side.Server)
+	changeVoltage(container: ItemContainer, client: NetworkClient, data: {value: number}): void {
+		this.data.voltage = Math.max(0, this.data.voltage + data.value);
+	}
 }
