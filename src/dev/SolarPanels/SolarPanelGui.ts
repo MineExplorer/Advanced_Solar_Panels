@@ -1,4 +1,4 @@
-function getSolarPanelGuiContent(name: string, maxOutput: number): UI.WindowContent {
+function getSolarPanelGuiContent(name: string, maxOutput: number): UI.StandardWindowContent {
 	return {
 		standard: {
 			header: {text: {text: Translation.translate(name)}},
