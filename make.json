@@ -22,7 +22,7 @@
 		],
 		"excludeFromRelease": [],
 		"modFolder": "AdvancedSolarPanels",
-		"pushTo": "storage/emulated/0/games/horizon/packs/Inner_Core/innercore/mods/",
+		"pushTo": "sdcard/games/horizon/packs/Inner_Core__ARM64_/innercore/mods/",
 		"ndkPath": null
 	},
 	"resources": [
