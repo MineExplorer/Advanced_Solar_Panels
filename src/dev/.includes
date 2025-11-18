@@ -3,7 +3,6 @@ config.ts
 translation.ts
 
 SolarPanels/**
-QuantumGenerator/**
 MolecularTransformer/**
 
 items/**
