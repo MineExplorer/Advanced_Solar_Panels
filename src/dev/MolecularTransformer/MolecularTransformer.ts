@@ -1,6 +1,6 @@
 /// <reference path="./TileEntityMolecularTransformer.ts" />
 
-namespace MolecularTransformer {
+{
 	const blockID = IDRegistry.genBlockID("molecularTransformer");
 	Block.createBlock("molecularTransformer", [
 		{name: "Molecular Transformer", texture: [["molecular_transformer", 0]], inCreative: true}
@@ -60,3 +60,13 @@ Callback.addCallback("PreLoaded", function() {
 });
 
 ICore.Machine.registerPrototype(BlockID.molecularTransformer, new TileEntityMolecularTransformer());
+
+StorageInterface.createInterface(BlockID.molecularTransformer, {
+	slots: {
+		"slot1": {input: true},
+		"slot2": {output: true}
+	},
+	isValidInput: function(item) {
+		return ICore.Recipe.hasRecipeFor("molecularTransformer", item.id, item.data);
+	}
+});

@@ -110,13 +110,3 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 		return add;
 	}
 }
-
-StorageInterface.createInterface(BlockID.molecularTransformer, {
-	slots: {
-		"slot1": {input: true},
-		"slot2": {output: true}
-	},
-	isValidInput: function(item) {
-		return ICore.Recipe.hasRecipeFor("molecularTransformer", item.id, item.data);
-	}
-});
