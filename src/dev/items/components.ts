@@ -27,8 +27,9 @@ ItemRegistry.createItem("mtCore", {name: "MT Core", icon: "mtCore"});
 ItemRegistry.createItem("quantumCore", {name: "Quantum Core", icon: "quantum_core"});
 
 Callback.addCallback("PreLoaded", function() {
-	ICore.Recipe.addRecipeFor("compressor", ItemID.iridiumChunk, {id: ItemID.ingotIridium, count: 1, data: 0})
-	ICore.Recipe.addRecipeFor("compressor", ItemID.uranium, {id: ItemID.ingotUranium, count: 1, data: 0})
+	const compressorDictionary: MachineRecipe.ProcessingRecipeDictionary = ICore.Recipe.getDictionary("compressor");
+	compressorDictionary.addRecipe({id: ItemID.iridiumChunk}, {id: ItemID.ingotIridium, count: 1});
+	compressorDictionary.addRecipe({id: ItemID.uranium}, {id: ItemID.ingotUranium, count: 1});
 
 	Recipes.addShaped({id: ItemID.ingotIrradiantUranium, count: 1, data: 0}, [
 		" a ",
@@ -70,7 +71,7 @@ Callback.addCallback("PreLoaded", function() {
 		"aaa",
 		"aba",
 		"aaa"
-	], ['a', 265, 0, 'b', ItemID.ingotIridium, 0]);
+	], ['a', ItemID.plateIron, 0, 'b', ItemID.ingotIridium, 0]);
 
 	Recipes.addShaped({id: ItemID.plateReinforcedIridiumIron, count: 1, data: 0}, [
 		"aba",

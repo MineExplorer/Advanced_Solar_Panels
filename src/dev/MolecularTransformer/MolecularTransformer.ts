@@ -25,39 +25,47 @@ Callback.addCallback("PreLoaded", function() {
 		"aba"
 	], ['x', ItemID.mtCore, 0, 'a', BlockID.machineBlockAdvanced, 0, 'b', BlockID.transformerEV, 0, 'c', ItemID.circuitAdvanced, 0]);
 
-	const mt_recipes = {
-		"minecraft:skull:1": {id: 399, count: 1, data: 0, energy: 25e7},
-		"minecraft:iron_ingot": {id: ItemID.iridiumChunk, count: 1, data: 0, energy: 9e6},
-		"minecraft:netherrack": {id: 289, count: 2, data: 0, energy: 7e4},
-		"minecraft:sand": {id: 13, count: 1, data: 0, energy: 5e4},
-		"minecraft:dirt": {id: 82, count: 1, data: 0, energy: 5e4},
-		"minecraft:charcoal": {id: 263, count: 1, data: 0, energy: 6e4},
-		"minecraft:glowstone_dust": {id: ItemID.sunnariumPart, count: 1, data: 0, energy: 1e6},
-		"minecraft:glowstone": {id: ItemID.sunnarium, count: 1, data: 0, energy: 9e6},
-		"minecraft:wool:4": {id: 89, count: 1, data: 0, energy: 5e5},
-		"minecraft:wool:11": {id: 22, count: 1, data: 0, energy: 5e5},
-		"minecraft:wool:14": {id: 152, count: 1, data: 0, energy: 5e5},
-		"minecraft:coal:0": {id: 264, count: 1, data: 0, energy: 9e6},
-		"ItemID.dustDiamond": {id: 264, count: 1, data: 0, energy: 6e4},
-		"ItemID.ingotLead": {id: ItemID.ingotSilver, count: 1, data: 0, energy: 5e5},
-		"ItemID.ingotSilver": {id: 266, count: 1, data: 0, energy: 1e6},
+	const mtRecipes: MolecularTransformerRecipe[] = [
+		{ source: {id: VanillaBlockID.skull, data: 1}, result: {id: VanillaItemID.nether_star, count: 1}, energy: 2.5e8 },
+		{ source: {id: VanillaItemID.iron_ingot}, result: {id: ItemID.iridiumChunk, count: 1}, energy: 9e6 },
+		{ source: {id: VanillaBlockID.netherrack}, result: {id: VanillaItemID.gunpowder, count: 2}, energy: 7e4 },
+		{ source: {id: VanillaBlockID.sand}, result: {id: VanillaBlockID.gravel, count: 1}, energy: 5e4 },
+		{ source: {id: VanillaBlockID.dirt}, result: {id: VanillaBlockID.clay, count: 1}, energy: 5e4 },
+		{ source: {id: VanillaItemID.charcoal}, result: {id: VanillaItemID.coal, count: 1}, energy: 6e4 },
+		{ source: {id: VanillaItemID.glowstone_dust}, result: {id: ItemID.sunnariumPart, count: 1}, energy: 1e6 },
+		{ source: {id: VanillaBlockID.glowstone}, result: {id: ItemID.sunnarium, count: 1}, energy: 9e6 },
+		{ source: {id: VanillaBlockID.wool, data: 4}, result: {id: VanillaBlockID.glowstone, count: 1}, energy: 5e5 },
+		{ source: {id: VanillaBlockID.wool, data: 11}, result: {id: VanillaBlockID.lapis_block, count: 1}, energy: 5e5 },
+		{ source: {id: VanillaBlockID.wool, data: 14}, result: {id: VanillaBlockID.redstone_block, count: 1}, energy: 5e5 },
+		{ source: {id: VanillaItemID.coal, data: 0}, result: {id: VanillaItemID.diamond, count: 1}, energy: 9e6 },
+		{ source: {id: ItemID.dustDiamond}, result: {id: VanillaItemID.diamond, count: 1}, energy: 6e4 },
+		{ source: {id: ItemID.ingotLead}, result: {id: ItemID.ingotSilver, count: 1}, energy: 5e5 },
+		{ source: {id: ItemID.ingotSilver}, result: {id: VanillaItemID.gold_ingot, count: 1}, energy: 1e6 },
 		// mod integration
-		"minecraft:lapis_lazuli": {id: ItemID.gemSapphire, count: 1, data: 0, energy: 5e6},
-		"minecraft:redstone": {id: ItemID.gemRuby, count: 1, data: 0, energy: 5e6},
-		"ItemID.dustTitanium": {id: ItemID.dustChrome, count: 1, data: 0, energy: 5e5},
-		"ItemID.ingotTitanium": {id: ItemID.ingotChrome, count: 1, data: 0, energy: 5e5},
-		"ItemID.ingotCopper": {id: ItemID.ingotNickel, count: 1, data: 0, energy: 3e5},
-		"minecraft:gold_ingot": {id: ItemID.ingotPlatinum, count: 1, data: 0, energy: 9e6},
+		{ source: {id: VanillaItemID.lapis_lazuli }, result: {id: ItemID.gemSapphire, count: 1}, energy: 5e6 },
+		{ source: {id: VanillaItemID.redstone }, result: {id: ItemID.gemRuby, count: 1}, energy: 5e6 },
+		{ source: {id: ItemID.dustTitanium}, result: {id: ItemID.dustChrome, count: 1}, energy: 5e5 },
+		{ source: {id: ItemID.ingotTitanium}, result: {id: ItemID.ingotChrome, count: 1}, energy: 5e5 },
+		{ source: {id: ItemID.ingotCopper}, result: {id: ItemID.ingotNickel, count: 1}, energy: 3e5 },
+		{ source: {id: VanillaItemID.gold_ingot}, result: {id: ItemID.ingotPlatinum, count: 1}, energy: 9e6 },
 		// nether quartz -> certus quartz 5e5
-	}
-	for (let key in mt_recipes) {
-		const result = mt_recipes[key];
-		if (!result.id) {
-			delete mt_recipes[key];
-		}
-	}
-	ICore.Recipe.registerRecipesFor("molecularTransformer", mt_recipes, true);
+	].filter(r => r.source.id && r.result.id);
+
+	ICore.Recipe.registerRecipes("molecularTransformer", mtRecipes);
 });
+
+type MolecularTransformerRecipe = {
+	source: ItemInputEntry,
+    result: ItemOutputEntry,
+	energy: number
+}
+
+class MolecularTransformerRecipeDictionary extends MachineRecipe.SourceRecipeDictionary<MolecularTransformerRecipe>{ 
+	register(recipe: MolecularTransformerRecipe): void {
+		recipe.result.data ??= 0;
+		super.register(recipe);
+	}
+}
 
 ICore.Machine.registerPrototype(BlockID.molecularTransformer, new TileEntityMolecularTransformer());
 
@@ -66,7 +74,7 @@ StorageInterface.createInterface(BlockID.molecularTransformer, {
 		"slot1": {input: true},
 		"slot2": {output: true}
 	},
-	isValidInput: function(item) {
-		return ICore.Recipe.hasRecipeFor("molecularTransformer", item.id, item.data);
+	isValidInput: function(item: ItemInstance, side: number, tileEntity: TileEntityMolecularTransformer) {
+		return !!tileEntity.getRecipe(item.id, item.data);
 	}
 });

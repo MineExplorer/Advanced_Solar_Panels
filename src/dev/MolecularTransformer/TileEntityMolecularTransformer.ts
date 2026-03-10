@@ -30,7 +30,15 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 	}
 
 	setupContainer(): void {
+		StorageInterface.setSlotValidatePolicy(this.container, "slot1", (_, id: number, count: number, data: number) =>  {
+			return !!this.getRecipe(id, data);
+		});
 		this.container.setSlotAddTransferPolicy("slot2", () => 0)
+	}
+
+	getRecipe(sourceId: number, sourceData: number): MolecularTransformerRecipe {
+		const dictionary: MolecularTransformerRecipeDictionary = ICore.Recipe.getDictionary("molecularTransformer");
+		return dictionary.getRecipe(sourceId, sourceData);
 	}
 
 	destroy(): boolean {
@@ -64,20 +72,18 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 		StorageInterface.checkHoppers(this);
 
 		const input: {id: number, data: number} = this.data.id ? this.data : this.container.getSlot("slot1");
-		const result = ICore.Recipe.getRecipeResult("molecularTransformer", input.id, input.data);
-		if (result) {
+		const recipe = this.getRecipe(input.id, input.data);
+		if (recipe) {
 			this.container.setText("textInput", Translation.translate("Input: ") + this.getItemName(input));
-			this.container.setText("textOutput", Translation.translate("Output: ") + this.getItemName(result));
-			this.container.setText("textEnergy", Translation.translate("Energy: ") + result.energy);
-			this.container.setText("textProgress", Translation.translate("Progress: ") + Math.floor(this.data.progress / result.energy * 100) + "%");
-			this.container.setScale("progressScale", this.data.progress / result.energy);
-			if (this.data.energyNeed) { // if recipe is operating
-				if (this.data.progress >= result.energy) {
-					const slot2 = this.container.getSlot("slot2");
-					slot2.setSlot(result.id, slot2.count + result.count, result.data);
-					input.id = input.data = 0;
-					this.data.progress = this.data.energyNeed = 0;
-				}
+			this.container.setText("textOutput", Translation.translate("Output: ") + this.getItemName(recipe.result as ItemInstance));
+			this.container.setText("textEnergy", Translation.translate("Energy: ") + recipe.energy);
+			this.container.setText("textProgress", Translation.translate("Progress: ") + Math.floor(this.data.progress / recipe.energy * 100) + "%");
+			this.container.setScale("progressScale", this.data.progress / recipe.energy);
+			if (this.data.progress >= recipe.energy) {
+				const slot2 = this.container.getSlot("slot2");
+				slot2.setSlot(recipe.result.id, slot2.count + recipe.result.count, recipe.result.data);
+				input.id = input.data = 0;
+				this.data.progress = this.data.energyNeed = 0;
 			}
 		}
 		else {
@@ -95,11 +101,11 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 		if (!this.data.energyNeed) {
 			const slot1 = this.container.getSlot("slot1");
 			const slot2 = this.container.getSlot("slot2");
-			const result = ICore.Recipe.getRecipeResult("molecularTransformer", slot1.id, slot1.data);
-			if (result && (slot2.id == 0 || slot2.id == result.id && slot2.data == result.data && slot2.count + result.count <= Item.getMaxStack(slot2.id))) {
+			const recipe = this.getRecipe(slot1.id, slot1.data);
+			if (recipe && (slot2.id == 0 || slot2.id == recipe.result.id && slot2.data == recipe.result.data && slot2.count + recipe.result.count <= 64)) {
 				this.data.id = slot1.id;
 				this.data.data = slot1.data;
-				this.data.energyNeed = result.energy;
+				this.data.energyNeed = recipe.energy;
 				this.decreaseSlot(slot1, 1);
 			} else {
 				return 0;

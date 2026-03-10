@@ -1,3 +1,6 @@
+declare type KeyValueMap<V> = {
+    [key: string | number]: V;
+};
 declare namespace Agriculture {
     let NutrientBiomeBonus: {
         21: number;
@@ -289,7 +292,7 @@ declare namespace Agriculture {
         canBeHarvested(te: ICropTileEntity): boolean;
         getGain(te: ICropTileEntity): ItemInstance;
         tick(te: ICropTileEntity): void;
-        hasMetalArmor(player: number): boolean;
+        hasMetalArmor(entity: number): boolean;
         getGrowthDuration(te: ICropTileEntity): number;
         getSizeAfterHarvest(te: ICropTileEntity): number;
         getRootsLength(te: ICropTileEntity): number;
@@ -500,8 +503,15 @@ declare namespace IC2Config {
     function getInt(name: string): number;
     function getFloat(name: string): number;
 }
-declare let lasttime: number;
-declare let frame: number;
+declare const EnergyProductionModifiers: {
+    FuelGenerator: number;
+    GeothermalGenerator: number;
+    SolarPanel: number;
+    WindGenerator: number;
+    WaterGenerator: number;
+    EUReactor: number;
+    RTGenerator: number;
+};
 declare class EUCableGrid extends EnergyGrid {
     maxSafetyVoltage?: number;
     constructor(energyType: EnergyType, maxValue: number, blockID: number, region: BlockSource);
@@ -533,7 +543,6 @@ declare namespace CableRegistry {
     export function registerCable(stringID: string, maxVoltage: number, maxInsulationLevel?: number): void;
     export function setupDrop(blockID: string): void;
     export function setupModel(id: number, width: number): void;
-    export {};
 }
 declare enum DamageSource {
     electricity = 0,
@@ -548,6 +557,7 @@ declare namespace EntityHelper {
     function isOnGround(entity: number): boolean;
     function resetFallHeight(entity: number): void;
     function getEntitiesInRadius(region: WorldRegion, pos: Vector, rad: number): number[];
+    function isPhysicalDamage(type: number): boolean;
 }
 declare class LaserShot {
     entity: number;
@@ -570,7 +580,7 @@ declare class LaserShot {
     });
     destroyBlock(x: number, y: number, z: number, block: Tile): void;
     checkBlock(x: number, y: number, z: number): void;
-    onProjectileHit(target: any): void;
+    onProjectileHit(target: Callback.ProjectileHitTarget): void;
 }
 declare namespace LaserShotProvider {
     function shootLaser(player: number, pos: Vector, vel: Vector3, params: {
@@ -582,21 +592,37 @@ declare namespace LaserShotProvider {
     }): void;
     function removeShot(laser: LaserShot): void;
     function updateAll(): void;
-    function onProjectileHit(projectile: number, target: any): void;
+    function onProjectileHit(projectile: number, target: Callback.ProjectileHitTarget): void;
 }
+/**
+ * API for integrating other mods with IndustrialCraft PE
+ */
 declare namespace IntegrationAPI {
+    /**
+     * Registers item in Recycler blacklist.
+     * @param id item id
+     */
     function addToRecyclerBlacklist(id: number): void;
+    /**
+     * Alllows item to be stored in Tool Box.
+     * @param id item id
+     */
     function addToolBooxValidItem(id: number): void;
+    /**
+     * Allows ore to be detected by Scanner and mined by Miner.
+     * Block ids starting with "ore" or ending with "_ore" are automatically registered.
+     * @param id block id
+     */
+    function registerOreForScanner(id: number): void;
 }
 declare namespace ItemName {
-    /**@deprecated */
-    function setRarity(id: number, rarity: number): void;
-    /**@deprecated */
-    function getRarity(id: number): number;
-    function addTooltip(id: number, tooltip: string): void;
+    function addTooltip(id: number, text: string, ...params: (string | number)[]): void;
     function addTierTooltip(blockID: string | number, tier: number): void;
-    function addStorageBlockTooltip(blockID: string | number, tier: number, capacity: string): void;
-    function getBlockStorageText(item: ItemInstance, tier: number, capacity: string): string;
+    function addProductionTooltip(blockID: string | number, unit: string, minValue: number, maxValue?: number): void;
+    function addConsumptionTooltip(blockID: string | number, unit: string, minValue: number, maxValue?: number): void;
+    function addStorageBlockTooltip(blockID: string | number, tier: number, capacity: string, output?: number): void;
+    function getTranslatedTextWithParams(key: string, ...params: (string | number)[]): string;
+    function getBlockStorageText(item: ItemInstance, tier: number, capacity: string, output?: number): string;
     function getPowerTierText(tier: number): string;
     function getItemStorageText(item: ItemInstance): string;
     function displayEnergy(energy: number, debug?: boolean): string;
@@ -606,8 +632,14 @@ declare namespace Machine {
         canRotate(side: number): boolean;
         getFacing(): number;
         setFacing(side: number): boolean;
-        getDefaultDrop(): number;
-        adjustDrop(item: ItemInstance): ItemInstance;
+        /**
+         * @returns drop when machine is broken by inappropriate tool
+         */
+        getDefaultDrop(): ItemInstance;
+        /**
+         * @returns drop when machine is demontaged by wrench
+         */
+        getDemontaged(): ItemInstance;
     }
 }
 declare namespace Machine {
@@ -615,6 +647,7 @@ declare namespace Machine {
     abstract class MachineBase extends TileEntityBase implements IWrenchable {
         upgrades?: string[];
         defaultDrop?: number;
+        data: this["defaultValues"];
         onInit(): void;
         setupContainer(): void;
         addLiquidTank(name: string, limit: number, liquids?: string[]): BlockEngine.LiquidTank;
@@ -624,8 +657,8 @@ declare namespace Machine {
         getFacing(): number;
         setFacing(side: number): boolean;
         decreaseSlot(slot: ItemContainerSlot, count: number): void;
-        getDefaultDrop(): number;
-        adjustDrop(item: ItemInstance): ItemInstance;
+        getDefaultDrop(): ItemInstance;
+        getDemontaged(): ItemInstance;
         audioSource: AudioSourceClient;
         wasActive: boolean;
         updateActivity(isActive: boolean): void;
@@ -637,13 +670,13 @@ declare namespace Machine {
         getFinishingSound(): string;
         startPlaySound(): void;
         stopPlaySound(): void;
-        /** @deprecated Network event, shouldn't be called */
-        playSound(packetData: {
+        onPlaySound(packetData: {
             name: string;
             vol: number;
             rad: number;
         }, packetExtra: any): void;
         playOnce(soundName: string, volume?: number, radius?: number): void;
+        protected canStackBeMerged(inputStack: ItemInstance, outputStack: ItemInstance, slotMaxStack?: number): boolean;
     }
 }
 declare namespace Machine {
@@ -653,7 +686,6 @@ declare namespace Machine {
         defaultValues: {
             energy: number;
         };
-        data: this["defaultValues"];
         getTier(): number;
         getEnergyStorage(): number;
         getRelativeEnergy(): number;
@@ -679,15 +711,16 @@ declare namespace Machine {
     }
 }
 declare namespace MachineRegistry {
-    function isMachine(id: number): any;
+    function isMachine(id: number): boolean;
     function registerPrototype(id: number, Prototype: TileEntity.TileEntityPrototype): void;
     function registerElectricMachine(id: number, Prototype: TileEntity.TileEntityPrototype): void;
     function registerGenerator(id: number, Prototype: TileEntity.TileEntityPrototype): void;
-    function createStorageInterface(blockID: number, descriptor: StorageDescriptor): void;
+    function createFluidStorageInterface(blockID: number, descriptor: StorageDescriptor): void;
     function setStoragePlaceFunction(blockID: string | number, hasVerticalRotation?: boolean): void;
-    /**@deprecated */
     function getMachineDrop(blockID: number, level: number): ItemInstanceArray[];
+    /** @deprecated */
     function setMachineDrop(blockID: string | number, dropID?: number): void;
+    function emptyTankOnClick(tank: BlockEngine.LiquidTank, item: ItemInstance, playerUid: number): boolean;
     function fillTankOnClick(tank: BlockEngine.LiquidTank, item: ItemInstance, playerUid: number): boolean;
     /** @deprecated */
     function isValidEUItem(id: number, count: number, data: number, container: UI.Container): boolean;
@@ -699,32 +732,18 @@ declare namespace MachineRegistry {
         elements: UI.ElementSet;
     }, minHeight?: number): UI.StandartWindow;
 }
-declare namespace MachineRecipeRegistry {
-    const recipeData: {};
-    const fluidRecipeData: {};
-    function registerRecipesFor(name: string, data: any, validateKeys?: boolean): void;
-    function addRecipeFor(name: string, input: any, result: any): void;
-    function requireRecipesFor(name: string, createIfNotFound?: boolean): any;
-    function getRecipeResult(name: string, key1: string | number, key2?: string | number): any;
-    function hasRecipeFor(name: string, key1: string | number, key2?: string | number): boolean;
-    function registerFluidRecipes(name: string, data: any): void;
-    function requireFluidRecipes(name: string): any;
-    function addFluidRecipe(name: string, liquid: string, data: any): void;
-    function getFluidRecipe(name: string, liquid: string): any;
-    type RecipeData = {
-        id: number;
-        count: number;
-        data?: number;
-        sourceCount?: number;
-    };
-}
+/** @deprecated */
+declare const transferByTier: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+};
 declare namespace MathUtil {
     function randomInt(min: number, max: number): number;
     function randomFloat(min: number, max: number): number;
     function setInRange(value: number, minValue: number, maxValue: number): number;
 }
-/** @deprecated */
-declare const randomInt: typeof MathUtil.randomInt;
 declare namespace RadiationAPI {
     type RadiationSource = {
         x: number;
@@ -738,15 +757,15 @@ declare namespace RadiationAPI {
     export const hazmatArmor: {};
     export let sources: RadiationSource[];
     export let effectDuration: {};
-    export function setRadioactivity(itemID: number, duration: number, stack?: boolean): void;
-    export function getRadioactivity(itemID: number): {
+    export function setRadioactivity(itemId: number, duration: number, stack?: boolean): void;
+    export function getRadioactivity(itemId: number): {
         duration: number;
-        stack: number;
+        stack: boolean;
     };
-    export function isRadioactiveItem(itemID: number): boolean;
-    export function emitItemRadiation(entity: number, itemID: number): boolean;
-    export function registerHazmatArmor(itemID: number): void;
-    export function isHazmatArmor(itemID: number): boolean;
+    export function isRadioactiveItem(itemId: number): boolean;
+    export function emitItemRadiation(entity: number, itemId: number): boolean;
+    export function registerHazmatArmor(itemId: number): void;
+    export function isHazmatArmor(itemId: number): boolean;
     export function hasHazmatSuit(playerUid: number): boolean;
     export function getRadiation(playerUid: number): number;
     export function setRadiation(playerUid: number, duration: number): void;
@@ -754,7 +773,124 @@ declare namespace RadiationAPI {
     export function addEffect(ent: number, duration: number): void;
     export function addEffectInRange(region: WorldRegion, x: number, y: number, z: number, radius: number, duration: number): void;
     export function addRadiationSource(x: number, y: number, z: number, dimension: number, radius: number, duration: number): void;
-    export {};
+}
+interface IRecipeDictionary<T> {
+    register(recipe: T): void;
+    findRecipe(predicate: (recipe: T) => boolean): Nullable<T>;
+    getAll(): T[];
+    clear(): void;
+}
+declare namespace MachineRecipe {
+    abstract class RecipeDictionary<T> implements IRecipeDictionary<T> {
+        recipes: KeyValueMap<T>;
+        abstract register(recipe: T): void;
+        findRecipe(predicate: (recipe: T) => boolean): Nullable<T>;
+        getAll(): T[];
+        clear(): void;
+        protected putRecipe(key: string, recipe: T): void;
+        protected removeByKey(recipeKey: string): boolean;
+    }
+}
+declare type ItemInputEntry = {
+    id: number;
+    count?: number;
+    data?: number;
+};
+declare type ItemOutputEntry = {
+    id: number;
+    count: number;
+    data?: number;
+    extra?: ItemExtraData;
+    chance?: number;
+};
+interface ItemSourceRecipe {
+    source: ItemInputEntry;
+}
+declare namespace MachineRecipe {
+    class SourceRecipeDictionary<T extends ItemSourceRecipe> extends RecipeDictionary<T> {
+        register(recipe: T): void;
+        getRecipe(sourceId: number, sourceData: number): Nullable<T>;
+        removeRecipe(sourceId: number, sourceData: number): boolean;
+        getInputKey(sourceId: number, sourceData: number): string;
+    }
+}
+declare type CuttingRecipe = {
+    source: ItemInputEntry;
+    result: ItemOutputEntry;
+    hardnessLevel: number;
+};
+declare namespace MachineRecipe {
+    class BlockCutterRecipeDictionary extends SourceRecipeDictionary<CuttingRecipe> {
+        addRecipe(input: ItemInputEntry, output: ItemOutputEntry, hardnessLevel: number): void;
+    }
+}
+declare type LiquidRecipeEntry = {
+    name: string;
+    amount: number;
+};
+declare type FluidEnrichRecipe = {
+    source: ItemInputEntry;
+    inputFluid: LiquidRecipeEntry;
+    outputFluid: LiquidRecipeEntry;
+};
+declare namespace MachineRecipe {
+    class FluidEnrichRecipeDictionary extends RecipeDictionary<FluidEnrichRecipe> {
+        register(recipe: FluidEnrichRecipe): void;
+        getRecipe(fluid: string, source: {
+            id: number;
+            data: number;
+        }): Nullable<FluidEnrichRecipe>;
+        removeRecipe(fluid: string, source: ItemInstance): boolean;
+        getInputKey(fluid: string, sourceId: number, sourceData: number): string;
+        addRecipe(input: ItemInputEntry, inputFluid: LiquidRecipeEntry, outputFluid: LiquidRecipeEntry): void;
+    }
+}
+declare type ItemProcessingRecipe = {
+    source: ItemInputEntry;
+    result: ItemOutputEntry[];
+    processTime?: number;
+};
+declare namespace MachineRecipe {
+    class ProcessingRecipeDictionary extends SourceRecipeDictionary<ItemProcessingRecipe> {
+        defaultProccessTime: number;
+        constructor(defaultProccessTime: number);
+        addRecipe(input: ItemInputEntry, output: ItemOutputEntry | ItemOutputEntry[], processTime?: number): void;
+    }
+}
+declare type ThermalCentrifugeRecipe = {
+    source: ItemInputEntry;
+    result: ItemOutputEntry[];
+    heat: number;
+    processTime?: number;
+};
+declare namespace MachineRecipe {
+    class ThermalCentrifugeRecipeDictionary extends SourceRecipeDictionary<ThermalCentrifugeRecipe> {
+        defaultProccessTime: number;
+        addRecipe(input: ItemInputEntry, output: ItemOutputEntry[], heat: number, processTime?: number): void;
+    }
+}
+declare namespace MachineRecipeRegistry {
+    const recipeData: {};
+    const fluidRecipeData: {};
+    const dictionaries: {};
+    function registerDictionary<T>(name: string, dictionary: IRecipeDictionary<T>): IRecipeDictionary<T>;
+    function getDictionary<T>(name: string): T;
+    function registerRecipe<T>(name: string, recipe: T): void;
+    function registerRecipes<T>(name: string, recipes: T[]): void;
+    /** @deprecated */
+    function registerRecipesFor<T>(name: string, data: T, parseKeys?: boolean): void;
+    /** @deprecated */
+    function addRecipeFor(name: string, input: any, result: any): void;
+    /** @deprecated */
+    function requireRecipesFor(name: string, createIfNotFound?: boolean): any;
+    /** @deprecated */
+    function getRecipeResult<T>(name: string, key1: string | number, key2?: string | number): T;
+    /** @deprecated */
+    function hasRecipeFor(name: string, key1: any, key2?: any): boolean;
+    function registerFluidRecipes(name: string, data: any): void;
+    function requireFluidRecipes(name: string): any;
+    function addFluidRecipe(name: string, liquid: string, data: any): void;
+    function getFluidRecipe(name: string, liquid: string): any;
 }
 interface IWrech {
     isUseable(item: ItemInstance, damage: number): boolean;
@@ -798,7 +934,7 @@ declare namespace ICTool {
 }
 declare namespace ToolHUD {
     let currentUIscreen: string;
-    let container: any;
+    let container: UI.Container;
     const Window: UI.Window;
     const buttons: {
         [key: string]: IHUDButton;
@@ -806,8 +942,6 @@ declare namespace ToolHUD {
     function registerButton(button: IHUDButton): void;
     function getButton(name: string): IHUDButton;
     function setButtonFor(id: number, name: string): void;
-    /** @deprecated */
-    function setArmorButton(id: number, name: string): void;
     function onClick(name: string): void;
 }
 declare namespace ToolHUD {
@@ -823,14 +957,13 @@ declare namespace ToolHUD {
         type: "armor" | "tool";
         uiData: ButtonUIData;
         uiElement: UI.UIButtonElement;
-        bindedItems: any[];
+        bindedItems: number[];
         constructor(name: string, type: "armor" | "tool", uiData: ButtonUIData);
         bindItem(id: number): void;
         isBindedItem(id: number): boolean;
         onClick(player: number): void;
         onUpdate(element: UI.UIButtonElement): void;
     }
-    export {};
 }
 declare namespace ToolHUD {
     class ButtonFly extends AbstractButton {
@@ -893,11 +1026,17 @@ declare namespace UpgradeAPI {
     function isUpgrade(id: number): boolean;
     function isValidUpgrade(id: number, machine: TileEntity): boolean;
     function registerUpgrade(id: number, upgrade: IUpgrade): void;
-    function useUpgrades(machine: TileEntity): UpgradeSet;
+    function getUpgradeSet(machine: TileEntity): UpgradeSet;
+    function useUpgrades(machine: TileEntity): void;
+    function performUpgrades(upgrades: UpgradeSet, isInit?: boolean): UpgradeSet;
     /** @deprecated */
     function executeUpgrades(machine: TileEntity): UpgradeSet;
     class UpgradeSet {
         protected tileEntity: TileEntity;
+        upgrades: {
+            upgrade: IUpgrade;
+            stack: ItemInstance;
+        }[];
         speedModifier: number;
         processTimeMultiplier: number;
         energyDemandMultiplier: number;
@@ -905,10 +1044,12 @@ declare namespace UpgradeAPI {
         extraTier: number;
         invertRedstone: boolean;
         constructor(tileEntity: TileEntity);
-        resetRates(): void;
-        useUpgrades(): void;
+        reset(): void;
+        getUpgrades(): void;
+        updateModifiers(): void;
+        onTick(): void;
         isValidUpgrade(upgrade: IUpgrade): boolean;
-        executeUprade(upgrade: IUpgrade, stack: ItemInstance): void;
+        performUpgradeModifiers(upgrade: IUpgrade, stack: ItemInstance): void;
         getProcessTime(defaultLength: number): number;
         getEnergyDemand(defaultEnergy: number): number;
         getEnergyStorage(defaultEnergyStorage: number): number;
@@ -918,7 +1059,19 @@ declare namespace UpgradeAPI {
 }
 declare namespace WindSim {
     let windStrength: number;
-    function getWindAt(height: number): number;
+    /**
+     * Returns the height with maximum wind strength based on biome ID
+     * @param biomeId - biome ID
+     */
+    function getWindStreamHeightByBiome(biomeId: number): number;
+    /**
+     * Returns height with maximum wind strength by coords
+     */
+    function getWindStreamHeight(blockSource: BlockSource, x: number, z: number): number;
+    /**
+     * Returns wind strength at coords
+     */
+    function getWindAt(blockSource: BlockSource, x: number, y: number, z: number): number;
 }
 declare namespace OreGenerator {
     type OreProperties = {
@@ -939,8 +1092,8 @@ declare namespace OreGenerator {
     };
     export function addFlag(oreName: string, flagName: string, disableOre?: boolean): void;
     export function randomCoords(random: java.util.Random, chunkX: number, chunkZ: number, minHeight?: number, maxHeight?: number): Vector;
-    export function generateOre(chunkX: number, chunkZ: number, blockID: number, properties: OreProperties, random: java.util.Random): void;
-    export {};
+    export function generateOre(chunkX: number, chunkZ: number, blockId: number, properties: OreProperties, random: java.util.Random): void;
+    export function replaceWithOre(coords: Vector, blockId: number, replaceId?: number): void;
 }
 declare namespace RubberTreeGenerator {
     let biomeData: {};
@@ -973,7 +1126,7 @@ declare class BlockRubberTreeLeaves extends BlockBase {
     onBreak(coords: Vector, block: Tile, region: BlockSource): void;
 }
 declare class BlockRubberTreeSapling extends BlockBase implements BlockItemBehavior {
-    PLACEABLE_TILES: {
+    static PLACEABLE_TILES: {
         2: boolean;
         3: boolean;
         60: boolean;
@@ -1132,8 +1285,7 @@ declare namespace Machine {
         setupContainer(): void;
         onTick(): void;
         getEnergyStorage(): number;
-        /** @deprecated Container event, shouldn't be called */
-        setSolarElement(container: ItemContainer, window: any, content: any, data: string): void;
+        onSetSunElement(container: ItemContainer, window: any, content: any, data: string): void;
     }
 }
 declare namespace Machine {
@@ -1320,8 +1472,7 @@ declare namespace Machine {
         stopPlaySound(): void;
         getLoopSound(): string;
         getGeigerSound(output: number): string;
-        /** @deprecated Container event, shouldn't be called */
-        setFieldSize(container: ItemContainer, window: any, content: any, data: {
+        onSetFieldSize(container: ItemContainer, window: any, content: any, data: {
             size: number;
         }): void;
     }
@@ -1340,6 +1491,7 @@ declare namespace Machine {
         };
         core: NuclearReactor;
         getTier(): number;
+        noupdate: boolean;
         onItemClick(id: number, count: number, data: number, coords: Callback.ItemUseCoordinates, player: number, extra: ItemExtraData): boolean;
         onInit(): void;
         onRedstoneUpdate(signal: number): void;
@@ -1357,14 +1509,14 @@ declare namespace Machine {
         getScreenByName(): UI.StandartWindow;
         getTier(): number;
         setupContainer(): void;
-        canRotate(): boolean;
+        canRotate(side: number): boolean;
         setFacing(side: number): boolean;
         onTick(): void;
         energyTick(type: string, src: EnergyTileNode): void;
         getEnergyStorage(): number;
         canReceiveEnergy(side: number): boolean;
         canExtractEnergy(side: number): boolean;
-        adjustDrop(item: ItemInstance): ItemInstance;
+        getDemontaged(): ItemInstance;
     }
 }
 declare function BatteryBlockWindow(header: string): UI.StandartWindow;
@@ -1384,6 +1536,55 @@ declare const BatteryBlockInterface: {
         };
     };
 };
+declare namespace Machine {
+    class StorageBatBox extends BatteryBlock {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class StorageCESU extends BatteryBlock {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class StorageMFE extends BatteryBlock {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class StorageMFSU extends BatteryBlock {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class ChargePad extends BatteryBlock {
+        carriedOnly: boolean;
+        constructor(tier: number, capacity: number, defaultDrop: number, guiScreen: UI.StandartWindow, carriedOnly?: boolean);
+        canRotate(side: number): boolean;
+        onTick(): void;
+        chargePlayers(players: number[], energy: number): void;
+    }
+}
+declare namespace Machine {
+    class ChargePadBatbox extends ChargePad {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class ChargepadCESU extends ChargePad {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class ChargepadMFE extends ChargePad {
+        constructor();
+    }
+}
+declare namespace Machine {
+    class ChargepadMFSU extends ChargePad {
+        constructor();
+    }
+}
 declare namespace Machine {
     class Transformer extends ElectricMachine {
         readonly tier: number;
@@ -1433,27 +1634,43 @@ declare namespace Machine {
         tier: number;
         energyStorage: number;
         energyDemand?: number;
-        processTime?: number;
+        processTimeMultiplier?: number;
+        upgradeSet?: UpgradeAPI.UpgradeSet;
         getTier(): number;
         getEnergyStorage(): number;
+        onInit(): void;
+        isValidSource(id: number, data: number): boolean;
         setupContainer(): void;
-        getRecipeResult(id: number, data: number): any;
-        useUpgrades(): UpgradeAPI.UpgradeSet;
+        useUpgrades(isInit: boolean): UpgradeAPI.UpgradeSet;
         onTick(): void;
-        updateProgress(): void;
+        performRecipe(): boolean;
+        updateProgress(recipeProcessTime?: number): void;
         isCompletedProgress(): boolean;
         canRotate(side: number): boolean;
+        onInterrupt(): void;
         getInterruptSound(): string;
     }
 }
 declare namespace Machine {
-    class ElectricFurnace extends ProcessingMachine {
+    abstract class BasicProcessingMachine extends ProcessingMachine {
+        getRecipeDictionary(): MachineRecipe.SourceRecipeDictionary<ItemProcessingRecipe>;
+        getRecipe(id: number, data: number): Nullable<ItemProcessingRecipe>;
+        isValidSource(id: number, data: number): boolean;
+        getOutputSlots(): string[];
+        performRecipe(): boolean;
+        canPutResult(result: ItemOutputEntry[]): boolean;
+        putResult(result: ItemOutputEntry[]): void;
+    }
+}
+declare namespace Machine {
+    class ElectricFurnace extends BasicProcessingMachine {
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         defaultDrop: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
-        getRecipeResult(id: number, data: number): ItemInstance;
+        getRecipe(id: number, data: number): Nullable<ItemProcessingRecipe>;
+        isValidSource(id: number, data: number): boolean;
         getStartingSound(): string;
         getOperationSound(): string;
         getFinishingSound(): string;
@@ -1469,15 +1686,17 @@ declare namespace Machine {
         energyDemand: number;
         defaultTier: number;
         defaultEnergyStorage: number;
+        maxHeat: number;
         defaultDrop: number;
         upgrades: string[];
         isHeating: boolean;
         isPowered: boolean;
         getScreenByName(): UI.IWindow;
+        isValidSource(id: number, data: number): boolean;
         getRecipeResult(id: number, data: number): ItemInstance;
-        checkResult(result: MachineRecipeRegistry.RecipeData, slot: ItemContainerSlot): boolean;
-        putResult(result: MachineRecipeRegistry.RecipeData, sourceSlot: ItemContainerSlot, resultSlot: ItemContainerSlot): void;
-        useUpgrades(): UpgradeAPI.UpgradeSet;
+        checkResult(result: ItemInstance, slot: ItemContainerSlot): boolean;
+        putResult(result: ItemInstance, sourceSlot: ItemContainerSlot, resultSlot: ItemContainerSlot): void;
+        useUpgrades(isInit: boolean): UpgradeAPI.UpgradeSet;
         onTick(): void;
         onRedstoneUpdate(signal: number): void;
         getStartingSound(): string;
@@ -1486,135 +1705,166 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
-    class Macerator extends ProcessingMachine {
+    class Macerator extends BasicProcessingMachine {
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
-        getRecipeResult(id: number, data: number): MachineRecipeRegistry.RecipeData;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
         getOperationSound(): string;
         getInterruptSound(): string;
     }
 }
 declare namespace Machine {
-    class Compressor extends ProcessingMachine {
+    class Compressor extends BasicProcessingMachine {
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
-        getRecipeResult(id: number, data: number): MachineRecipeRegistry.RecipeData;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
         getOperationSound(): string;
         getInterruptSound(): string;
     }
 }
 declare namespace Machine {
-    class Extractor extends ProcessingMachine {
+    class Extractor extends BasicProcessingMachine {
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
-        getRecipeResult(id: number): MachineRecipeRegistry.RecipeData;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
         getOperationSound(): string;
         getInterruptSound(): string;
     }
 }
 declare namespace Machine {
+    type SolidCannerRecipe = {
+        source: {
+            id: number;
+            data?: number;
+        };
+        can: number;
+        result: ItemInstance;
+    };
+    class SolidCannerRecipeDictionary extends MachineRecipe.SourceRecipeDictionary<SolidCannerRecipe> {
+    }
     class SolidCanner extends ProcessingMachine {
         defaultEnergyStorage: number;
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
+        getRecipeDictionary(): SolidCannerRecipeDictionary;
+        isValidSource(id: number, data: number): boolean;
         setupContainer(): void;
-        getRecipeResult(id: number): {
-            can: number;
-            result: ItemInstance;
-        };
-        onTick(): void;
+        performRecipe(): boolean;
     }
 }
 declare namespace Machine {
-    class Canner extends ProcessingMachine {
+    enum CannerMode {
+        SolidCanning = 0,
+        EmptyItem = 1,
+        FillItem = 2,
+        FluidCanning = 3
+    }
+    export class Canner extends ProcessingMachine {
         inputTank: BlockEngine.LiquidTank;
         outputTank: BlockEngine.LiquidTank;
         defaultValues: {
             energy: number;
             progress: number;
-            mode: number;
+            mode: CannerMode;
         };
         defaultEnergyStorage: number;
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
-        isValidSourceItem(id: number, data: number): boolean;
-        isValidCan(id: number, data: number): boolean;
+        getSolidRecipeDictionary(): SolidCannerRecipeDictionary;
+        getFluidRecipeDictionary(): MachineRecipe.FluidEnrichRecipeDictionary;
+        isValidSource(id: number, data: number): boolean;
+        isValidCan(id: number, data: number, extra: ItemExtraData): boolean;
         setupContainer(): void;
         onTick(): void;
+        performRecipe(): boolean;
+        performSolidRecipe(sourceSlot: ItemContainerSlot, canSlot: ItemContainerSlot, resultSlot: ItemContainerSlot): boolean;
+        emptyLiquidItem(canSlot: ItemContainerSlot, resultSlot: ItemContainerSlot): boolean;
+        fillLiquidItem(canSlot: ItemContainerSlot, resultSlot: ItemContainerSlot): boolean;
+        performFluidRecipe(sourceSlot: ItemContainerSlot): boolean;
         canRotate(side: number): boolean;
-        /** @deprecated Container event, shouldn't be called */
-        switchMode(): void;
-        /** @deprecated Container event, shouldn't be called */
-        switchTanks(): void;
-        /** @deprecated Container event, shouldn't be called */
-        updateUI(container: ItemContainer, window: any, content: any, data: {
+        onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
+        onSwitchMode(): void;
+        onSwitchTanks(): void;
+        onUpdateUiMode(container: ItemContainer, window: any, content: any, data: {
             mode: number;
         }): void;
     }
 }
 declare namespace Machine {
-    class Recycler extends ProcessingMachine {
+    const recyclerBlacklist: number[];
+    class Recycler extends BasicProcessingMachine {
         defaultEnergyStorage: number;
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
         setupContainer(): void;
-        onTick(): void;
+        getRecipe(id: number, data: number): Nullable<ItemProcessingRecipe>;
+        isValidSource(id: number, data: number): boolean;
         getOperationSound(): string;
         getInterruptSound(): string;
     }
 }
 declare namespace Machine {
-    class MetalFormer extends ProcessingMachine {
+    enum MetalFormerMode {
+        Rolling = 0,
+        Cutting = 1,
+        Extruding = 2
+    }
+    export class MetalFormer extends BasicProcessingMachine {
         defaultValues: {
             energy: number;
             progress: number;
-            mode: number;
+            mode: MetalFormerMode;
         };
         defaultEnergyStorage: number;
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: ["overclocker", "transformer", "energyStorage", "itemEjector", "itemPulling"];
         getScreenByName(): UI.IWindow;
-        getRecipeResult(id: number): MachineRecipeRegistry.RecipeData;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
+        getRecipeCategory(): "metalRolling" | "metalCutting" | "metalExtruding";
         onTick(): void;
-        /** @deprecated Container event, shouldn't be called */
-        switchMode(): void;
-        /** @deprecated Container event, shouldn't be called */
-        setModeIcon(container: ItemContainer, window: any, content: any, data: {
+        onSwitchMode(): void;
+        onSetModeIcon(container: ItemContainer, window: any, content: any, data: {
             mode: number;
         }): void;
     }
 }
 declare namespace Machine {
-    class OreWasher extends ProcessingMachine {
+    type OreWashingRecipe = {
+        source: ItemInputEntry;
+        result: [ItemOutputEntry, ItemOutputEntry?, ItemOutputEntry?];
+        processTime?: number;
+    };
+    class OreWasher extends BasicProcessingMachine {
         liquidTank: BlockEngine.LiquidTank;
         defaultEnergyStorage: number;
         defaultEnergyDemand: number;
         defaultProcessTime: number;
         upgrades: string[];
         getScreenByName(): UI.IWindow;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
+        getOutputSlots(): string[];
+        isValidSource(id: number, data: number): boolean;
         setupContainer(): void;
-        checkResult(result: number[]): boolean;
-        putResult(result: number[]): void;
-        getRecipeResult(id: number): number[];
         onTick(): void;
+        performRecipe(): boolean;
         onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
     }
 }
 declare namespace Machine {
-    class ThermalCentrifuge extends ProcessingMachine {
+    class ThermalCentrifuge extends BasicProcessingMachine {
         defaultValues: {
             energy: number;
             progress: number;
@@ -1627,20 +1877,38 @@ declare namespace Machine {
         defaultProcessTime: number;
         defaultDrop: number;
         upgrades: string[];
+        heatingEnergyDemand: number;
         isHeating: boolean;
         isPowered: boolean;
         getScreenByName(): UI.IWindow;
-        useUpgrades(): UpgradeAPI.UpgradeSet;
-        getRecipeResult(id: number): {
-            result: number[];
-            heat: number;
-        };
-        checkResult(result: number[]): boolean;
-        putResult(result: number[]): void;
+        getRecipeDictionary(): MachineRecipe.ThermalCentrifugeRecipeDictionary;
+        getOutputSlots(): string[];
+        useUpgrades(isInit: boolean): UpgradeAPI.UpgradeSet;
         onTick(): void;
+        performRecipe(): boolean;
         onRedstoneUpdate(signal: number): void;
-        /** @deprecated Container event, shouldn't be called */
-        setIndicator(container: ItemContainer, window: any, content: any, data: string): void;
+        onSetIndicator(container: ItemContainer, window: any, content: any, data: string): void;
+    }
+}
+declare namespace Machine {
+    class BlockCutter extends ProcessingMachine {
+        defaultTier: number;
+        defaultEnergyDemand: number;
+        defaultEnergyStorage: number;
+        defaultProcessTime: number;
+        speedModifier: number;
+        upgrades: string[];
+        getScreenByName(): UI.IWindow;
+        getRecipeDictionary(): MachineRecipe.BlockCutterRecipeDictionary;
+        isValidSource(id: number, data: number): boolean;
+        setupContainer(): void;
+        getBladeLevel(bladeId: number): number;
+        onTick(): void;
+        performRecipe(): boolean;
+        getInterruptSound(): string;
+        onShowWarning(container: ItemContainer, window: any, content: any, data: {
+            show: boolean;
+        }): void;
     }
 }
 declare namespace Machine {
@@ -1655,28 +1923,26 @@ declare namespace Machine {
         upgrades: string[];
         isHeating: boolean;
         isPowered: boolean;
+        upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         setupContainer(): void;
         canRotate(): boolean;
-        getRecipeResult(id: number): {
-            result: number[];
-            duration: number;
-        };
-        checkResult(result: number[]): boolean;
-        putResult(result: number[]): void;
+        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
+        getRecipe(id: number, data: number): Nullable<ItemProcessingRecipe>;
+        checkResult(result: ItemOutputEntry[]): boolean;
+        putResult(result: ItemOutputEntry[]): void;
         controlAir(): boolean;
         useUpgrades(): void;
+        onInit(): void;
         onTick(): void;
         getMaxHeat(): number;
         onRedstoneUpdate(signal: number): void;
         canReceiveHeat(side: number): boolean;
         receiveHeat(amount: number): number;
-        /** @deprecated Container event, shouldn't be called */
-        showAirImage(container: ItemContainer, window: any, content: any, data: {
+        onSetAirImage(container: ItemContainer, window: any, content: any, data: {
             show: boolean;
         }): void;
-        /** @deprecated Container event, shouldn't be called */
-        setIndicator(container: ItemContainer, window: any, content: any, data: string): void;
+        onSetIndicator(container: ItemContainer, window: any, content: any, data: string): void;
     }
 }
 declare namespace Machine {
@@ -1699,6 +1965,11 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
+    let ENERGY_PER_MATTER: number;
+    type CatalyserData = {
+        input: number;
+        output: number;
+    };
     class MassFabricator extends ElectricMachine {
         defaultValues: {
             energy: number;
@@ -1740,11 +2011,13 @@ declare namespace Machine {
         energyStorage: number;
         energyDemand: number;
         processTime: number;
+        upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         getTier(): number;
         getEnergyStorage(): number;
         setupContainer(): void;
-        useUpgrades(): void;
+        onInit(): void;
+        useUpgrades(isInit: boolean): void;
         onTick(): void;
         extractLiquid(): void;
         recursiveSearch(liquid: string, x: number, y: number, z: number, checked: {}): Vector;
@@ -1767,8 +2040,7 @@ declare namespace Machine {
         setupContainer(): void;
         onTick(): void;
         transportLiquid(): void;
-        /** @deprecated Container event, shouldn't be called */
-        invertMode(): void;
+        onInvertMode(): void;
     }
 }
 declare namespace Machine {
@@ -1796,7 +2068,7 @@ declare namespace Machine {
         getScreenByName(): UI.IWindow;
         getTier(): number;
         setupContainer(): void;
-        getMiningValues(tool: number): {
+        getMiningValues(toolId: number): {
             energy: number;
             time: number;
         };
@@ -1833,6 +2105,7 @@ declare namespace Machine {
         getTier(): number;
         getEnergyStorage(): number;
         setupContainer(): void;
+        onInit(): void;
         getScanRadius(itemID: number): number;
         setUpgradeStats(): void;
         onTick(): void;
@@ -1842,20 +2115,19 @@ declare namespace Machine {
         harvestBlock(x: number, y: number, z: number, block: Tile): boolean;
         checkDrop(drop: ItemInstanceArray[]): boolean;
         drop(items: ItemInstance[]): void;
-        adjustDrop(item: ItemInstance): ItemInstance;
+        getDemontaged(): ItemInstance;
         onRedstoneUpdate(signal: number): void;
         canRotate(side: number): boolean;
-        /** @deprecated Container event, shouldn't be called */
-        switchWhitelist(): void;
-        /** @deprecated Container event, shouldn't be called */
-        switchSilktouch(): void;
-        /** @deprecated Container event, shouldn't be called */
-        restart(): void;
-        /** @deprecated Container event, shouldn't be called */
-        setSilktouchIcon(container: ItemContainer, window: any, content: any, data: {
+        onSwitchWhitelist(): void;
+        onSwitchSilktouch(): void;
+        onRestart(): void;
+        onSetSilktouchIcon(container: ItemContainer, window: any, content: any, data: {
             mode: boolean;
         }): void;
     }
+}
+declare namespace Machine {
+    const guiCropHarvester: UI.StandartWindow;
 }
 declare namespace Machine {
     class CropHarvester extends ElectricMachine {
@@ -1873,16 +2145,21 @@ declare namespace Machine {
         upgrades: string[];
         tier: number;
         energyStorage: number;
+        upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         getTier(): number;
         getEnergyStorage(): number;
-        useUpgrades(): void;
+        useUpgrades(isInit: boolean): void;
         setupContainer(): void;
+        onInit(): void;
         onTick(): void;
         scan(): void;
         putItem(item: ItemInstance): void;
         isInventoryFull(): boolean;
     }
+}
+declare namespace Machine {
+    const guiCropMatron: UI.StandartWindow;
 }
 declare namespace Machine {
     class CropMatron extends ElectricMachine {
@@ -1941,17 +2218,29 @@ declare namespace Machine {
     class IndustrialWorkbench extends MachineBase {
         defaultValues: {
             recipeChecked: boolean;
+            patterns: {};
         };
         defaultDrop: number;
         getScreenByName(): UI.IWindow;
+        onInit(): void;
         setupContainer(): void;
         onTick(): void;
         destroy(): boolean;
         provideRecipe(playerUid: number, allAtOnce: boolean): void;
         refillItems(): void;
-        /** @deprecated Container event, shouldn't be called directly */
-        craft(packetData: {
+        clearGridForPlayer(playerUid: number): void;
+        clearPattern(index: number): void;
+        savePattern(result: ItemInstance, index: number): void;
+        addItemToBuffer(item: ItemInstance): void;
+        getRecipeEntries(): Nullable<Recipes.RecipeEntry[]>;
+        onCraft(packetData: {
             allAtOnce: boolean;
+        }, client: NetworkClient): void;
+        onClearGrid(packetData: {}, client: NetworkClient): void;
+        onAddPattern(packetData: {}, client: NetworkClient): void;
+        onRemovePattern(packetData: {}, client: NetworkClient): void;
+        onUsePattern({ index }: {
+            index: number;
         }, client: NetworkClient): void;
     }
 }
@@ -1991,6 +2280,11 @@ declare class ItemReinforcedDoor extends ItemCommon implements ItemBehavior {
     constructor(stringID: string, name: string, texture?: string | Item.TextureData);
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
+declare const SCRAP_BOX_RANDOM_DROP: {
+    chance: number;
+    id: number;
+    data: number;
+}[];
 declare class ItemScrapBox extends ItemCommon implements ItemBehavior {
     constructor();
     getDropItem(): {
@@ -2003,9 +2297,18 @@ declare class ItemEmptyCell extends ItemCommon implements ItemBehavior {
     constructor();
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, playerUid: number): void;
 }
-declare class ItemLiquidCell extends ItemCommon implements ItemBehavior {
+declare class ItemLiquidCell extends ItemCommon implements ItemBehavior, LiquidItem {
+    liquidType: string;
+    liquidStorage: number;
     constructor(stringID: string, liquid: string);
     onNameOverride(item: ItemInstance, name: string): string;
+    isValidLiquid(liquid: string): boolean;
+    getLiquidStored(): string;
+    getAmount(itemData: number): number;
+    getLiquid(item: ItemInstance, amount: number): number;
+    addLiquid(item: ItemInstance, liquid: string, amount: number): number;
+    getEmptyItem(): ItemInstance;
+    getFullItem(liquid: string): Nullable<ItemInstance>;
 }
 declare class ItemSeedBag extends ItemCommon implements ItemBehavior {
     constructor();
@@ -2231,6 +2534,38 @@ declare class ArmorHazmat extends ArmorIC2 implements ArmorListeners {
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): void;
 }
+interface IJetpack {
+    canFly(item: ItemInstance, playerPos: Vector): boolean;
+}
+declare namespace JetpackProvider {
+    function registerItem(itemId: number, instance: IJetpack): void;
+    function canBeFlying(item: ItemInstance, playerPos: Vector): boolean;
+    function getFlying(playerUid: number): boolean;
+    function setFlying(playerUid: number, fly: boolean): boolean;
+    function onTick(item: ItemInstance, playerUid: number): ItemInstance;
+}
+declare class ArmorFuelJetpack extends ArmorIC2 implements IJetpack, LiquidItem {
+    liquidStorage: number;
+    /** Amount of ticks of active flying that 1 mB of fuel provides */
+    static FUEL_BURN_TICKS: number;
+    constructor();
+    onNameOverride(item: ItemInstance, name: string): string;
+    onHurt(params: {
+        attacker: number;
+        damage: number;
+        type: number;
+    }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
+    onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
+    canFly(item: ItemInstance, playerPos: Vector): boolean;
+    burnFuel(item: ItemInstance, amount: number): ItemInstance;
+    isValidLiquid(liquid: string): boolean;
+    getLiquidStored(itemData: number): string;
+    getAmount(itemData: number): number;
+    getEmptyItem(): ItemInstance;
+    getFullItem(liquid: string): Nullable<ItemInstance>;
+    getLiquid(item: ItemInstance, amount: number): number;
+    addLiquid(item: ItemInstance, liquid: string, amount: number): number;
+}
 declare abstract class ArmorElectric extends ArmorIC2 implements IElectricItem, ArmorListeners {
     energy: string;
     maxCharge: number;
@@ -2246,12 +2581,7 @@ declare abstract class ArmorElectric extends ArmorIC2 implements IElectricItem, 
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
 }
-declare namespace JetpackProvider {
-    function getFlying(playerUid: number): boolean;
-    function setFlying(playerUid: number, fly: boolean): boolean;
-    function onTick(item: ItemInstance, playerUid: number): ItemInstance;
-}
-declare class ArmorJetpackElectric extends ArmorElectric {
+declare class ArmorElectricJetpack extends ArmorElectric implements IJetpack {
     constructor();
     onHurt(params: {
         attacker: number;
@@ -2259,6 +2589,7 @@ declare class ArmorJetpackElectric extends ArmorElectric {
         type: number;
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
+    canFly(item: ItemInstance, playerPos: Vector): boolean;
 }
 declare class ArmorBatpack extends ArmorElectric {
     constructor(stringID: string, name: string, maxCharge: number, transferLimit: number, tier: number);
@@ -2297,17 +2628,6 @@ declare class ArmorNanoBoots extends ArmorNanoSuit {
         type: number;
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
 }
-/** @deprecated */
-declare const NANO_ARMOR_FUNCS: {
-    hurt: (params: {
-        attacker: number;
-        damage: number;
-        type: number;
-        b1: boolean;
-        b2: boolean;
-    }, item: ItemInstance, index: number) => boolean;
-    tick: (item: ItemInstance, index: number) => boolean;
-};
 declare class ArmorQuantumSuit extends ArmorElectric {
     constructor(stringID: string, name: string, params: ArmorParams, inCreative?: boolean);
     getEnergyPerDamage(): number;
@@ -2327,7 +2647,7 @@ declare class ArmorQuantumHelmet extends ArmorQuantumSuit {
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
 }
-declare class ArmorQuantumChestplate extends ArmorQuantumSuit {
+declare class ArmorQuantumChestplate extends ArmorQuantumSuit implements IJetpack {
     constructor(stringID: string, name: string, texture: string);
     onHurt(params: {
         attacker: number;
@@ -2335,6 +2655,7 @@ declare class ArmorQuantumChestplate extends ArmorQuantumSuit {
         type: number;
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
     onTick(item: ItemInstance, index: number, playerUid: number): ItemInstance;
+    canFly(item: ItemInstance, playerPos: Vector): boolean;
 }
 declare class ArmorQuantumLeggings extends ArmorQuantumSuit {
     runTime: number;
@@ -2349,17 +2670,6 @@ declare class ArmorQuantumBoots extends ArmorQuantumSuit {
         type: number;
     }, item: ItemInstance, index: number, playerUid: number): ItemInstance;
 }
-/** @deprecated */
-declare const QUANTUM_ARMOR_FUNCS: {
-    hurt: (params: {
-        attacker: number;
-        damage: number;
-        type: number;
-        b1: boolean;
-        b2: boolean;
-    }, item: ItemInstance, index: number) => boolean;
-    tick: (item: ItemInstance, index: number) => boolean;
-};
 declare class ArmorSolarHelmet extends ArmorIC2 implements ArmorListeners {
     constructor(stringID: string, name: string, params: ArmorParams);
     onTick(item: ItemInstance, index: number, playerUid: number): void;
@@ -2402,7 +2712,6 @@ declare class ItemTransmitter extends ItemCommon implements ItemBehavior {
     onNameOverride(item: ItemInstance, name: string): string;
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
-declare let ore_blocks: number[];
 declare class ItemScanner extends ItemElectric {
     constructor(stringID: string, name: string, maxCharge: number, transferLimit: number, tier: number);
     getScanRadius(): number;
@@ -2413,6 +2722,8 @@ declare class ItemWindMeter extends ItemElectric implements ItemBehavior {
     energyPerUse: number;
     constructor();
     onNoTargetUse(item: ItemStack, player: number): void;
+    onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
+    measureWindAt(coords: Vector, item: ItemInstance, player: number): void;
 }
 declare class ItemTreetap extends ItemCommon {
     constructor();
