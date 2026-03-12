@@ -69,6 +69,8 @@ class MolecularTransformerRecipeDictionary extends MachineRecipe.SourceRecipeDic
 
 ICore.Machine.registerPrototype(BlockID.molecularTransformer, new TileEntityMolecularTransformer());
 
+ICore.Recipe.registerDictionary("molecularTransformer", new MolecularTransformerRecipeDictionary())
+
 StorageInterface.createInterface(BlockID.molecularTransformer, {
 	slots: {
 		"slot1": {input: true},

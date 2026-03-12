@@ -514,13 +514,24 @@ declare const EnergyProductionModifiers: {
 };
 declare class EUCableGrid extends EnergyGrid {
     maxSafetyVoltage?: number;
+    cubeArea: {
+        minX: number;
+        minY: number;
+        minZ: number;
+        maxX: number;
+        maxY: number;
+        maxZ: number;
+    };
     constructor(energyType: EnergyType, maxValue: number, blockID: number, region: BlockSource);
+    mergeGrid(grid: EUCableGrid): this;
+    addCoords(x: number, y: number, z: number): void;
+    updateCubeArea(x: number, y: number, z: number): void;
     onOverload(voltage: number): void;
     addBurnParticles(x: number, y: number, z: number): void;
     canConductEnergy(coord1: Vector, coord2: Vector, side: number): boolean;
     dealElectrocuteDamage(damage: number): void;
     tick(): void;
-    getCoordsFromString(coordKey: string): Vector;
+    private recalculateCubeArea;
 }
 declare namespace CableRegistry {
     type CableData = {
@@ -775,6 +786,7 @@ declare namespace RadiationAPI {
     export function addRadiationSource(x: number, y: number, z: number, dimension: number, radius: number, duration: number): void;
 }
 interface IRecipeDictionary<T> {
+    name: string;
     register(recipe: T): void;
     findRecipe(predicate: (recipe: T) => boolean): Nullable<T>;
     getAll(): T[];
@@ -782,6 +794,7 @@ interface IRecipeDictionary<T> {
 }
 declare namespace MachineRecipe {
     abstract class RecipeDictionary<T> implements IRecipeDictionary<T> {
+        name: string;
         recipes: KeyValueMap<T>;
         abstract register(recipe: T): void;
         findRecipe(predicate: (recipe: T) => boolean): Nullable<T>;
@@ -814,6 +827,23 @@ declare namespace MachineRecipe {
         getInputKey(sourceId: number, sourceData: number): string;
     }
 }
+declare type BlastFurnaceRecipe = {
+    source: {
+        id: number;
+        count?: number;
+    };
+    result: ItemOutputEntry[];
+    heatCost: number;
+};
+declare namespace MachineRecipe {
+    class BlastFurnaceRecipeDictionary extends SourceRecipeDictionary<BlastFurnaceRecipe> {
+        register(recipe: BlastFurnaceRecipe): void;
+        addRecipe(input: {
+            id: number;
+            count?: number;
+        }, output: ItemOutputEntry[], heatCost: number): void;
+    }
+}
 declare type CuttingRecipe = {
     source: ItemInputEntry;
     result: ItemOutputEntry;
@@ -821,6 +851,7 @@ declare type CuttingRecipe = {
 };
 declare namespace MachineRecipe {
     class BlockCutterRecipeDictionary extends SourceRecipeDictionary<CuttingRecipe> {
+        register(recipe: CuttingRecipe): void;
         addRecipe(input: ItemInputEntry, output: ItemOutputEntry, hardnessLevel: number): void;
     }
 }
@@ -854,6 +885,7 @@ declare namespace MachineRecipe {
     class ProcessingRecipeDictionary extends SourceRecipeDictionary<ItemProcessingRecipe> {
         defaultProccessTime: number;
         constructor(defaultProccessTime: number);
+        register(recipe: ItemProcessingRecipe): void;
         addRecipe(input: ItemInputEntry, output: ItemOutputEntry | ItemOutputEntry[], processTime?: number): void;
     }
 }
@@ -866,6 +898,7 @@ declare type ThermalCentrifugeRecipe = {
 declare namespace MachineRecipe {
     class ThermalCentrifugeRecipeDictionary extends SourceRecipeDictionary<ThermalCentrifugeRecipe> {
         defaultProccessTime: number;
+        register(recipe: ThermalCentrifugeRecipe): void;
         addRecipe(input: ItemInputEntry, output: ItemOutputEntry[], heat: number, processTime?: number): void;
     }
 }
@@ -1915,23 +1948,26 @@ declare namespace Machine {
     class BlastFurnace extends MachineBase implements IHeatConsumer {
         defaultValues: {
             progress: number;
+            maxProgress: number;
             air: number;
             sourceID: number;
             heat: number;
         };
-        defaultDrop: number;
-        upgrades: string[];
+        readonly maxHeatConsumption = 100;
+        readonly defaultDrop: number;
+        readonly upgrades: string[];
         isHeating: boolean;
+        lastReceivedHeat: number;
         isPowered: boolean;
         upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         setupContainer(): void;
         canRotate(): boolean;
-        getRecipeDictionary(): MachineRecipe.ProcessingRecipeDictionary;
-        getRecipe(id: number, data: number): Nullable<ItemProcessingRecipe>;
+        getRecipeDictionary(): MachineRecipe.BlastFurnaceRecipeDictionary;
+        getRecipe(id: number): Nullable<BlastFurnaceRecipe>;
         checkResult(result: ItemOutputEntry[]): boolean;
         putResult(result: ItemOutputEntry[]): void;
-        controlAir(): boolean;
+        controlAir(receivedHeat: number): boolean;
         useUpgrades(): void;
         onInit(): void;
         onTick(): void;
@@ -1939,6 +1975,7 @@ declare namespace Machine {
         onRedstoneUpdate(signal: number): void;
         canReceiveHeat(side: number): boolean;
         receiveHeat(amount: number): number;
+        performRecipe(receivedHeat: number): number;
         onSetAirImage(container: ItemContainer, window: any, content: any, data: {
             show: boolean;
         }): void;
