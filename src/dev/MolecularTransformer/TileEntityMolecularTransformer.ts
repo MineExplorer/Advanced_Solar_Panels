@@ -97,6 +97,10 @@ class TileEntityMolecularTransformer extends Machine.ElectricMachine {
 		this.setActive(this.energyNode.energyIn > 0);
 	}
 
+	getEnergyCapacity(): number {
+		return Math.max(this.data.energyNeed - this.data.progress, 131072);
+	}
+
 	energyReceive(type: string, amount: number, voltage: number): number {
 		if (!this.data.energyNeed) {
 			const slot1 = this.container.getSlot("slot1");

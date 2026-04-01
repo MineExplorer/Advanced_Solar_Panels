@@ -1,6 +1,18 @@
 declare type KeyValueMap<V> = {
     [key: string | number]: V;
 };
+declare const NetworkDataKeys: {
+    isActive: string;
+    isBoosted: string;
+    powerOutput: string;
+};
+declare const IC2NetworkPackets: {
+    demontage: string;
+    cropLongClick: string;
+    cutterLongClick: string;
+    hudClick: string;
+    jetpackFlying: string;
+};
 declare namespace Agriculture {
     let NutrientBiomeBonus: {
         21: number;
@@ -61,7 +73,7 @@ declare namespace Agriculture {
         /**
          * Register new card
          * @param {CropCard} cropCard
-         * @returns {number} registred card ID
+         * @returns {number} registered card ID
          */
         static registerCropCard(cropCard: CropCard): void;
         static getALLCropCards(): CropCard[];
@@ -512,39 +524,75 @@ declare const EnergyProductionModifiers: {
     EUReactor: number;
     RTGenerator: number;
 };
+declare type DamageChunk = {
+    chunkX: number;
+    chunkY: number;
+    chunkZ: number;
+    minX: number;
+    minY: number;
+    minZ: number;
+    maxX: number;
+    maxY: number;
+    maxZ: number;
+    maxSafetyVoltage: number;
+    nodes: BlockNode[];
+};
+declare class CableDamageArea {
+    static readonly CHUNK_SIZE = 8;
+    maxSafetyVoltage: number;
+    readonly chunks: DamageChunk[];
+    /**
+     * Builds a cached view of hazardous cable blocks grouped by world chunk.
+     * Computes both per-chunk and total safe-voltage thresholds in one pass.
+     */
+    constructor(blockNodes: {
+        [key: string]: BlockNode;
+    });
+    /** Returns true when there are no hazardous cable chunks to process. */
+    isEmpty(): boolean;
+    /**
+     * Returns the damage chunk by its coords or null if it's not found.
+     * @param chunkX chunk X coord
+     * @param chunkY chunk Y coord
+     * @param chunkZ chunk Z coord
+     */
+    getChunk(chunkX: number, chunkY: number, chunkZ: number): DamageChunk;
+    /**
+     * Returns the chunk slice assigned to the current tick within a 20-tick cycle.
+     */
+    getChunkBatch(threadTime: number): DamageChunk[];
+}
 declare class EUCableGrid extends EnergyGrid {
-    maxSafetyVoltage?: number;
-    cubeArea: {
-        minX: number;
-        minY: number;
-        minZ: number;
-        maxX: number;
-        maxY: number;
-        maxZ: number;
-    };
+    damageEnabled: boolean;
+    damageArea: CableDamageArea;
     constructor(energyType: EnergyType, maxValue: number, blockID: number, region: BlockSource);
-    mergeGrid(grid: EUCableGrid): this;
-    addCoords(x: number, y: number, z: number): void;
-    updateCubeArea(x: number, y: number, z: number): void;
-    onOverload(voltage: number): void;
+    isValidWire(tile: Tile): boolean;
+    mergeGrid(grid: EUCableGrid): EUCableGrid;
+    addCoords(x: number, y: number, z: number, tile: Tile): BlockNode;
+    removeCoords(x: number, y: number, z: number): BlockNode;
+    onOverload(packetSize: number): void;
     addBurnParticles(x: number, y: number, z: number): void;
     canConductEnergy(coord1: Vector, coord2: Vector, side: number): boolean;
-    dealElectrocuteDamage(damage: number): void;
     tick(): void;
-    private recalculateCubeArea;
+    private dealElectrocuteDamage;
+    private getOrCreateDamageArea;
+    private resetDamageArea;
 }
 declare namespace CableRegistry {
     type CableData = {
         name: string;
         insulation: number;
         maxInsulation: number;
+        maxSafetyVoltage: number;
     };
     export const maxSafetyVoltage: {
         0: number;
         1: number;
         2: number;
+        3: number;
     };
-    export function getCableData(id: number): CableData;
+    export function getMaxSafetyVoltage(insulation: number): number;
+    export function getCableData(id: number): Nullable<CableData>;
     export function canBePainted(id: number): boolean;
     export function getBlockID(stringID: string, insulation: number): number;
     export function createBlock(stringID: string, properties: {
@@ -692,13 +740,15 @@ declare namespace Machine {
 }
 declare namespace Machine {
     abstract class ElectricMachine extends MachineBase implements EnergyTile {
+        readonly energyTypes: {
+            [energyName: string]: EnergyType;
+        };
         energyNode: EnergyTileNode;
-        energyTypes: object;
         defaultValues: {
             energy: number;
         };
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         getRelativeEnergy(): number;
         getMaxPacketSize(): number;
         onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
@@ -706,18 +756,21 @@ declare namespace Machine {
         dischargeSlot(slotName: string): void;
         energyTick(type: string, src: EnergyTileNode): void;
         energyReceive(type: string, amount: number, voltage: number): number;
+        getFreeEnergyAmount(): number;
         getExplosionPower(): number;
+        isEnergyProducer(): boolean;
         isConductor(type: string): boolean;
         canReceiveEnergy(side: number, type: string): boolean;
-        canExtractEnergy(side: number, type: string): boolean;
+        canEmitEnergy(side: number, type: string): boolean;
         rebuildGrid(): void;
     }
 }
 declare namespace Machine {
     abstract class Generator extends ElectricMachine {
         defaultDrop: number;
+        isEnergyProducer(): boolean;
         canReceiveEnergy(): boolean;
-        canExtractEnergy(): boolean;
+        canEmitEnergy(): boolean;
         energyTick(type: string, src: EnergyTileNode): void;
     }
 }
@@ -764,10 +817,13 @@ declare namespace RadiationAPI {
         radius: number;
         timer: number;
     };
-    export const radioactiveItems: {};
-    export const hazmatArmor: {};
+    export const radioactiveItems: KeyValueMap<{
+        duration: number;
+        stack: boolean;
+    }>;
+    export const hazmatArmor: KeyValueMap<boolean>;
     export let sources: RadiationSource[];
-    export let effectDuration: {};
+    export let effectDuration: KeyValueMap<number>;
     export function setRadioactivity(itemId: number, duration: number, stack?: boolean): void;
     export function getRadioactivity(itemId: number): {
         duration: number;
@@ -1054,16 +1110,45 @@ interface IUpgrade {
     getExtraEnergyStorage?(item: ItemInstance, machine: TileEntity): number;
     onTick?(item: ItemInstance, machine: TileEntity): void;
 }
+/**
+ * API to manage machine upgrades.
+ */
 declare namespace UpgradeAPI {
-    function getUpgrade(id: number): IUpgrade;
+    /** Returns upgrade instance by item id. */
+    function getUpgrade(id: number): Nullable<IUpgrade>;
+    /** Checks if an item is an upgrade. */
     function isUpgrade(id: number): boolean;
-    function isValidUpgrade(id: number, machine: TileEntity): boolean;
+    /**
+     * Registers an upgrade.
+     * @param id item id
+     * @param upgrade upgrade data
+     */
     function registerUpgrade(id: number, upgrade: IUpgrade): void;
+    /**
+     * Checks if an upgrade is valid for a tile entity.
+     * @param id item id
+     * @param machine tile entity
+     */
+    function isValidUpgrade(id: number, machine: TileEntity): boolean;
+    /**
+     * Creates an UpgradeSet for provided tile entity.
+     * @param machine tile entity
+     * @returns empty UpgradeSet
+     */
     function getUpgradeSet(machine: TileEntity): UpgradeSet;
-    function useUpgrades(machine: TileEntity): void;
+    /**
+     * Creates an UpgradeSet and performs upgrades for provided tile entity.
+     * @param machine tile entity
+     * @returns UpgradeSet with applied modifiers
+     */
+    function useUpgrades(machine: TileEntity): UpgradeSet;
+    /**
+     * Fetches upgrades from tile entity container and performs them.
+     * @param upgrades upgrade set
+     * @param isInit if true, upgrades tick won't be called
+     * @returns UpgradeSet with applied modifiers
+     */
     function performUpgrades(upgrades: UpgradeSet, isInit?: boolean): UpgradeSet;
-    /** @deprecated */
-    function executeUpgrades(machine: TileEntity): UpgradeSet;
     class UpgradeSet {
         protected tileEntity: TileEntity;
         upgrades: {
@@ -1082,7 +1167,7 @@ declare namespace UpgradeAPI {
         updateModifiers(): void;
         onTick(): void;
         isValidUpgrade(upgrade: IUpgrade): boolean;
-        performUpgradeModifiers(upgrade: IUpgrade, stack: ItemInstance): void;
+        applyUpgradeModifiers(upgrade: IUpgrade, stack: ItemInstance): void;
         getProcessTime(defaultLength: number): number;
         getEnergyDemand(defaultEnergy: number): number;
         getEnergyStorage(defaultEnergyStorage: number): number;
@@ -1129,7 +1214,7 @@ declare namespace OreGenerator {
     export function replaceWithOre(coords: Vector, blockId: number, replaceId?: number): void;
 }
 declare namespace RubberTreeGenerator {
-    let biomeData: {};
+    let biomeData: KeyValueMap<number>;
     function getBiomeChance(biomeID: number): number;
     function growRubberTree(region: BlockSource, x: number, y: number, z: number): void;
     function generateRubberTree(region: BlockSource, x: number, y: number, z: number, random: java.util.Random, replacePlants?: boolean): void;
@@ -1151,8 +1236,8 @@ declare class BlockRubberTreeLogLatex extends BlockBase {
 declare class BlockRubberTreeLeaves extends BlockBase {
     constructor();
     getDrop(coords: Vector, block: Tile, level: number, enchant: ToolAPI.EnchantData, item: ItemStack, region: BlockSource): ItemInstanceArray[];
-    checkLeaves(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
-    checkLeavesFor6Sides(x: number, y: number, z: number, region: BlockSource, explored: {}): boolean;
+    checkLeaves(x: number, y: number, z: number, region: BlockSource, explored: KeyValueMap<true>): boolean;
+    checkLeavesFor6Sides(x: number, y: number, z: number, region: BlockSource, explored: KeyValueMap<true>): boolean;
     updateLeaves(x: number, y: number, z: number, region: BlockSource): void;
     onRandomTick(x: number, y: number, z: number, block: Tile, region: BlockSource): void;
     onDestroy(coords: Vector, block: Tile, region: BlockSource, player: number): void;
@@ -1269,7 +1354,7 @@ declare namespace Machine {
         consumeFuel(slotName: string): number;
         onTick(): void;
         getOperationSound(): string;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(side: number): boolean;
     }
 }
@@ -1281,7 +1366,7 @@ declare namespace Machine {
         onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
         onTick(): void;
         getOperationSound(): string;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(side: number): boolean;
     }
 }
@@ -1302,7 +1387,7 @@ declare namespace Machine {
         };
         onTick(): void;
         getOperationSound(): string;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(side: number): boolean;
     }
 }
@@ -1317,7 +1402,7 @@ declare namespace Machine {
         onInit(): void;
         setupContainer(): void;
         onTick(): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         onSetSunElement(container: ItemContainer, window: any, content: any, data: string): void;
     }
 }
@@ -1360,7 +1445,7 @@ declare namespace Machine {
         setupContainer(): void;
         getScreenByName(): UI.IWindow;
         onTick(): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
     }
 }
 declare namespace Machine {
@@ -1390,7 +1475,7 @@ declare namespace Machine {
         setupContainer(): void;
         calcOutput(): number;
         onTick(): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(): boolean;
     }
 }
@@ -1546,9 +1631,10 @@ declare namespace Machine {
         setFacing(side: number): boolean;
         onTick(): void;
         energyTick(type: string, src: EnergyTileNode): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
+        isEnergyProducer(): boolean;
         canReceiveEnergy(side: number): boolean;
-        canExtractEnergy(side: number): boolean;
+        canEmitEnergy(side: number): boolean;
         getDemontaged(): ItemInstance;
     }
 }
@@ -1628,11 +1714,12 @@ declare namespace Machine {
         };
         getScreenName(): string;
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         energyTick(type: string, src: EnergyTileNode): void;
+        isEnergyProducer(): boolean;
         onRedstoneUpdate(signal: number): void;
         canReceiveEnergy(side: number): boolean;
-        canExtractEnergy(side: number): boolean;
+        canEmitEnergy(side: number): boolean;
         canRotate(): boolean;
         setFacing(side: number): boolean;
     }
@@ -1665,12 +1752,12 @@ declare namespace Machine {
         defaultEnergyDemand?: number;
         defaultProcessTime?: number;
         tier: number;
-        energyStorage: number;
+        energyCapacity: number;
         energyDemand?: number;
         processTimeMultiplier?: number;
         upgradeSet?: UpgradeAPI.UpgradeSet;
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         onInit(): void;
         isValidSource(id: number, data: number): boolean;
         setupContainer(): void;
@@ -1794,7 +1881,7 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
-    enum CannerMode {
+    const enum CannerMode {
         SolidCanning = 0,
         EmptyItem = 1,
         FillItem = 2,
@@ -1849,7 +1936,7 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
-    enum MetalFormerMode {
+    const enum MetalFormerMode {
         Rolling = 0,
         Cutting = 1,
         Extruding = 2
@@ -2020,7 +2107,7 @@ declare namespace Machine {
         setupContainer(): void;
         onTick(): void;
         onRedstoneUpdate(signal: number): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         getExplosionPower(): number;
         canRotate(side: number): boolean;
         setBoosted(isBoosted: boolean): void;
@@ -2045,13 +2132,13 @@ declare namespace Machine {
         defaultDrop: number;
         upgrades: string[];
         tier: number;
-        energyStorage: number;
+        energyCapacity: number;
         energyDemand: number;
         processTime: number;
         upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         setupContainer(): void;
         onInit(): void;
         useUpgrades(isInit: boolean): void;
@@ -2118,7 +2205,7 @@ declare namespace Machine {
         drop(items: ItemInstance[]): void;
         onTick(): void;
         getOperationSound(): string;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(side: number): boolean;
     }
 }
@@ -2138,13 +2225,14 @@ declare namespace Machine {
         upgrades: string[];
         tier: number;
         maxScanCount: number;
+        upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         setupContainer(): void;
         onInit(): void;
         getScanRadius(itemID: number): number;
-        setUpgradeStats(): void;
+        applyUpgradeModifiers(): void;
         onTick(): void;
         updateUi(): void;
         operate(): void;
@@ -2181,11 +2269,11 @@ declare namespace Machine {
         defaultDrop: number;
         upgrades: string[];
         tier: number;
-        energyStorage: number;
+        energyCapacity: number;
         upgradeSet?: UpgradeAPI.UpgradeSet;
         getScreenByName(): UI.IWindow;
         getTier(): number;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         useUpgrades(isInit: boolean): void;
         setupContainer(): void;
         onInit(): void;
@@ -2213,7 +2301,7 @@ declare namespace Machine {
         onTick(): void;
         scan(): void;
         getSlot(type: string): Nullable<ItemContainerSlot>;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
         canRotate(side: number): boolean;
     }
 }
@@ -2310,18 +2398,13 @@ declare namespace Machine {
         getTier(): number;
         onTick(): void;
         onRedstoneUpdate(signal: number): void;
-        getEnergyStorage(): number;
+        getEnergyCapacity(): number;
     }
 }
 declare class ItemReinforcedDoor extends ItemCommon implements ItemBehavior {
     constructor(stringID: string, name: string, texture?: string | Item.TextureData);
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
 }
-declare const SCRAP_BOX_RANDOM_DROP: {
-    chance: number;
-    id: number;
-    data: number;
-}[];
 declare class ItemScrapBox extends ItemCommon implements ItemBehavior {
     constructor();
     getDropItem(): {
@@ -2362,7 +2445,7 @@ declare class ItemTinCanFull extends ItemCommon implements ItemBehavior {
     onNoTargetUse(item: ItemStack, playerUid: number): void;
 }
 declare namespace IC2Coffee {
-    type CofeeEffect = {
+    type CoffeeEffect = {
         amplifier: number;
         effectTimer: number;
     };
@@ -2724,6 +2807,7 @@ declare class EUMeterUpdatable {
     container: ItemContainer;
     mode: number;
     time: number;
+    voltageTime: number;
     sum: number;
     minValue: number;
     maxValue: number;
@@ -2734,10 +2818,17 @@ declare class EUMeterUpdatable {
     openGuiFor(client: NetworkClient): void;
     resetValues(): void;
     tick(): void;
+    getVoltageTime(value: number): number;
     getUnit(): string;
     getValue(): number;
     displayValue(value: number): string;
     destroy(): void;
+}
+declare const enum EuMeterMode {
+    EnergyIn = 0,
+    EnergyOut = 1,
+    EnergyGain = 2,
+    Voltage = 3
 }
 declare class EUMeter extends ItemCommon implements ItemBehavior {
     constructor();

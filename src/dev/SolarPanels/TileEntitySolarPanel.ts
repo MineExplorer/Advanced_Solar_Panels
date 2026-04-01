@@ -71,7 +71,7 @@ class TileEntitySolarPanel extends Machine.Generator {
 		this.container.sendChanges();
 	}
 
-	getEnergyStorage(): number {
+	getEnergyCapacity(): number {
 		return this.energyStorage;
 	}
 
