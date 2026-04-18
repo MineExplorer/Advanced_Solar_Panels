@@ -505,8 +505,6 @@ declare namespace Agriculture {
         getGrowthDuration(tileentity: ICropTileEntity): number;
     }
 }
-declare namespace Agriculture {
-}
 declare namespace IC2Config {
     let soundEnabled: boolean;
     let voltageEnabled: boolean;
@@ -749,6 +747,8 @@ declare namespace Machine {
         };
         getTier(): number;
         getEnergyCapacity(): number;
+        /** @deprecated use getEnergyCapacity instead */
+        getEnergyStorage(): number;
         getRelativeEnergy(): number;
         getMaxPacketSize(): number;
         onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, player: number): boolean;
@@ -758,7 +758,7 @@ declare namespace Machine {
         energyReceive(type: string, amount: number, voltage: number): number;
         getFreeEnergyAmount(): number;
         getExplosionPower(): number;
-        isEnergyProducer(): boolean;
+        isGenerator(): boolean;
         isConductor(type: string): boolean;
         canReceiveEnergy(side: number, type: string): boolean;
         canEmitEnergy(side: number, type: string): boolean;
@@ -768,7 +768,7 @@ declare namespace Machine {
 declare namespace Machine {
     abstract class Generator extends ElectricMachine {
         defaultDrop: number;
-        isEnergyProducer(): boolean;
+        isGenerator(): boolean;
         canReceiveEnergy(): boolean;
         canEmitEnergy(): boolean;
         energyTick(type: string, src: EnergyTileNode): void;
@@ -1087,8 +1087,6 @@ declare namespace ToolHUD {
         onClick(player: number): void;
     }
 }
-declare namespace ToolHUD {
-}
 interface IModeSwitchable extends ItemBase {
     onModeSwitch(item: ItemInstance, player: number): void;
 }
@@ -1263,7 +1261,7 @@ declare class BlockOreIridium extends BlockOre {
     getDrop(coords: Vector, block: Tile, level: number, enchant: ToolAPI.EnchantData, item: ItemStack): ItemInstanceArray[];
 }
 declare class BlockResource extends BlockBase {
-    constructor(id: string, resourceName: string, miningLevel: number);
+    constructor(id: string, resourceName: string, textures: string[], miningLevel: number);
 }
 declare class BlockStone extends BlockBase {
     constructor(id: string, name: string, texture: [string, number] | [string, number][], miningLevel: number, blockType?: string | BlockType);
@@ -1465,6 +1463,7 @@ declare namespace Machine {
         canRotate(): boolean;
         canReceiveHeat(side: number): boolean;
         receiveHeat(amount: number): number;
+        getEnergyCapacity(): number;
         energyTick(type: string, src: EnergyTileNode): void;
     }
 }
@@ -1553,7 +1552,9 @@ declare namespace Machine {
             maxHeat: number;
             hem: number;
             output: number;
+            updateTicker: number;
         };
+        tickRate: number;
         chambers: ReactorChamber[];
         getScreenByName(): UI.IWindow;
         onInit(): void;
@@ -1596,7 +1597,7 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
-    class ReactorChamber extends Generator {
+    class ReactorChamber extends ElectricMachine {
         data: {
             energy: number;
             corePos: Vector;
@@ -1615,6 +1616,7 @@ declare namespace Machine {
         onRedstoneUpdate(signal: number): void;
         destroy(): boolean;
         isConductor(): boolean;
+        canEmitEnergy(): boolean;
     }
 }
 declare namespace Machine {
@@ -1632,7 +1634,6 @@ declare namespace Machine {
         onTick(): void;
         energyTick(type: string, src: EnergyTileNode): void;
         getEnergyCapacity(): number;
-        isEnergyProducer(): boolean;
         canReceiveEnergy(side: number): boolean;
         canEmitEnergy(side: number): boolean;
         getDemontaged(): ItemInstance;
@@ -1716,7 +1717,6 @@ declare namespace Machine {
         getTier(): number;
         getEnergyCapacity(): number;
         energyTick(type: string, src: EnergyTileNode): void;
-        isEnergyProducer(): boolean;
         onRedstoneUpdate(signal: number): void;
         canReceiveEnergy(side: number): boolean;
         canEmitEnergy(side: number): boolean;
@@ -2306,6 +2306,36 @@ declare namespace Machine {
     }
 }
 declare namespace Machine {
+    class IndustrialWorkbench extends MachineBase {
+        defaultValues: {
+            recipeChecked: boolean;
+            patterns: {};
+        };
+        defaultDrop: number;
+        getScreenByName(): UI.IWindow;
+        onInit(): void;
+        setupContainer(): void;
+        onTick(): void;
+        destroy(): boolean;
+        provideRecipe(playerUid: number, allAtOnce: boolean): void;
+        refillItems(): void;
+        clearGridForPlayer(playerUid: number): void;
+        clearPattern(index: number): void;
+        savePattern(result: ItemInstance, index: number): void;
+        addItemToBuffer(item: ItemInstance): void;
+        getRecipeEntries(): Nullable<Recipes.RecipeEntry[]>;
+        onCraft(packetData: {
+            allAtOnce: boolean;
+        }, client: NetworkClient): void;
+        onClearGrid(packetData: {}, client: NetworkClient): void;
+        onAddPattern(packetData: {}, client: NetworkClient): void;
+        onRemovePattern(packetData: {}, client: NetworkClient): void;
+        onUsePattern({ index }: {
+            index: number;
+        }, client: NetworkClient): void;
+    }
+}
+declare namespace Machine {
     class AutoCrafter extends ProcessingMachine {
         defaultValues: {
             energy: number;
@@ -2338,40 +2368,6 @@ declare namespace Machine {
         getRecipeEntriesCount(item: ItemInstance): number;
         addItem(item: ItemInstance, side?: number, maxCount?: number): number;
     }
-}
-declare namespace Machine {
-    class IndustrialWorkbench extends MachineBase {
-        defaultValues: {
-            recipeChecked: boolean;
-            patterns: {};
-        };
-        defaultDrop: number;
-        getScreenByName(): UI.IWindow;
-        onInit(): void;
-        setupContainer(): void;
-        onTick(): void;
-        destroy(): boolean;
-        provideRecipe(playerUid: number, allAtOnce: boolean): void;
-        refillItems(): void;
-        clearGridForPlayer(playerUid: number): void;
-        clearPattern(index: number): void;
-        savePattern(result: ItemInstance, index: number): void;
-        addItemToBuffer(item: ItemInstance): void;
-        getRecipeEntries(): Nullable<Recipes.RecipeEntry[]>;
-        onCraft(packetData: {
-            allAtOnce: boolean;
-        }, client: NetworkClient): void;
-        onClearGrid(packetData: {}, client: NetworkClient): void;
-        onAddPattern(packetData: {}, client: NetworkClient): void;
-        onRemovePattern(packetData: {}, client: NetworkClient): void;
-        onUsePattern({ index }: {
-            index: number;
-        }, client: NetworkClient): void;
-    }
-}
-declare namespace Machine {
-}
-declare namespace Machine {
 }
 declare namespace Machine {
     class Teleporter extends MachineBase {
@@ -3040,6 +3036,7 @@ declare class ItemPainter extends ItemCommon {
     readonly color: number;
     constructor(colorIndex: number);
     onItemUse(coords: Callback.ItemUseCoordinates, item: ItemStack, block: Tile, player: number): void;
+    useItem(coords: Callback.ItemUseCoordinates, item: ItemInstance, player: number): void;
 }
 declare class UpgradeMFSU extends ItemCommon implements ItemBehavior {
     constructor();
