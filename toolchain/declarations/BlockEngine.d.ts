@@ -35,9 +35,9 @@ declare namespace BlockEngine {
         /** Client side method decorator for TileEntity */
         function ClientSide(target: TileEntityBase, propertyName: string): void;
         /** Adds method as network event in TileEntity */
-        function NetworkEvent(side: Side): (target: TileEntityBase, propertyName: string) => void;
+        function NetworkEvent(side: Side, eventName?: string): (target: TileEntityBase, propertyName: string) => void;
         /** Adds method as container event in TileEntity */
-        function ContainerEvent(side: Side): (target: TileEntityBase, propertyName: string) => void;
+        function ContainerEvent(side: Side, eventName?: string): (target: TileEntityBase, propertyName: string) => void;
     }
 }
 declare enum Side {
@@ -772,7 +772,7 @@ interface BlockType {
      * Inexistent states are ignored.
      * @default ["color"] // this state always has been here
      */
-    states?: [EBlockStates | number | string][];
+    states?: (EBlockStates | number | string)[];
     /**
      * Alternatively catch on fire chance modifier,
      * values between 0 and 100, with a higher number
@@ -1921,10 +1921,16 @@ declare abstract class TileEntityBase implements TileEntity {
         [key: string]: boolean;
     };
     __networkEvents: {
-        [key: string]: Side;
+        [key: string]: {
+            side: Side;
+            eventName: string;
+        };
     };
     __containerEvents: {
-        [key: string]: Side;
+        [key: string]: {
+            side: Side;
+            eventName: string;
+        };
     };
     readonly x: number;
     readonly y: number;
@@ -2028,7 +2034,7 @@ declare abstract class TileEntityBase implements TileEntity {
      * Prevents all actions on click
      */
     preventClick(): void;
-    onItemClick(id: number, count: number, data: number, coords: Callback.ItemUseCoordinates, player: number, extra: ItemExtraData): boolean;
+    onItemClick(id: number, count: number, data: number, coords: Callback.ItemUseCoordinates, player: number, extra: Nullable<ItemExtraData>): boolean;
     destroyBlock(coords: Callback.ItemUseCoordinates, player: number): void;
     /** @deprecated */
     redstone(params: {
